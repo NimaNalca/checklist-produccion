@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist Producción</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5F3EE;--surface:#FFFFFF;--border:#DDD9D0;--text:#1A1814;--muted:#7A7670;--accent:#2D4A3E;--accent-light:#E8F0EC;--pend:#7A3B1E;--pend-bg:#FDF0E8;--pend-border:#E8B896;--disp:#1A4A2E;--disp-bg:#E8F5ED;--disp-border:#96D4A8;--na:#7A7670;--na-bg:#F0EDE8;--na-border:#C8C4BC;}
@@ -635,31 +636,51 @@ function renderTotales(){
 }
 
 // ── MODAL COPIAR ─────────────────────────────────────────────
-function downloadCSV(nombre, filas){
-  var rows = filas.filter(function(f){ return f && f.length > 0; });
-  var csv = rows.map(function(row){
-    return row.map(function(c){
-      var val = c!=null ? String(c) : '';
-      if(val.indexOf(',')>=0 || val.indexOf('"')>=0 || val.indexOf('\n')>=0){
-        val = '"' + val.replace(/"/g,'""') + '"';
+function downloadXLSX(nombre, filas){
+  var wb = XLSX.utils.book_new();
+  // Split into sheets by section labels (single-cell rows)
+  var currentRows = [];
+  var currentName = nombre;
+  function flush(){
+    if(currentRows.length > 0){
+      var ws = XLSX.utils.aoa_to_sheet(currentRows);
+      // Style header row
+      var range = XLSX.utils.decode_range(ws['!ref']||'A1');
+      var colWidths = [];
+      for(var C=range.s.c; C<=range.e.c; C++){
+        var maxW = 8;
+        for(var R=range.s.r; R<=range.e.r; R++){
+          var cell = ws[XLSX.utils.encode_cell({r:R,c:C})];
+          if(cell && cell.v) maxW = Math.max(maxW, String(cell.v).length+2);
+        }
+        colWidths.push({wch: Math.min(maxW, 40)});
       }
-      return val;
-    }).join(',');
-  }).join('\n');
-  var bom = '\uFEFF'; // UTF-8 BOM so Excel reads accents correctly
-  var blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = nombre+'.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      ws['!cols'] = colWidths;
+      var safeName = currentName.slice(0,31).replace(/[\/\\\?\*\[\]]/g,'');
+      XLSX.utils.book_append_sheet(wb, ws, safeName);
+    }
+  }
+  filas.forEach(function(fila){
+    if(!fila || fila.length===0) return;
+    if(fila.length===1){
+      flush();
+      currentName = fila[0];
+      currentRows = [];
+    } else {
+      currentRows.push(fila);
+    }
+  });
+  flush();
+  if(wb.SheetNames.length===0){
+    // Single sheet
+    var ws = XLSX.utils.aoa_to_sheet(filas.filter(function(f){return f&&f.length>1;}));
+    XLSX.utils.book_append_sheet(wb, ws, nombre.slice(0,31));
+  }
+  XLSX.writeFile(wb, nombre.replace(/\s+/g,'_')+'.xlsx');
 }
 
 function showModal(titulo, filas){
-  downloadCSV(titulo, filas);
+  downloadXLSX(titulo, filas);
 }
 
 function exportResumen(){
