@@ -620,19 +620,23 @@ function buildTallerRows(tallerName){
 
   var rows=[['Material','Detalle','Total']];
 
-  // Materiales de base
-  rows.push(['— ETIQUETAS —','','']);
-  rows.push(['Etiqueta NIMA','1 por prenda',totalPrendas+' u.']);
-  Object.keys(tallasAcc).sort().forEach(function(t){
-    rows.push(['Etiqueta talla '+t,'1 por prenda talla '+t,tallasAcc[t]+' u.']);
-  });
-  rows.push(['Etiqueta cuidados','1 por prenda',totalPrendas+' u.']);
-  rows.push(['— OTROS —','','']);
-  rows.push(['Ganchos plásticos','Según necesidad','—']);
-  rows.push(['Hilo','Según necesidad','—']);
+  // MATERIALES
   rows.push(['— MATERIALES —','','']);
-
   Object.values(acc).forEach(function(r){rows.push([r.label,r.det,r.total+' '+r.unit]);});
+
+  // ETIQUETAS
+  rows.push(['— ETIQUETAS —','','']);
+  rows.push(['Etiqueta NIMA','',totalPrendas+' u.']);
+  Object.keys(tallasAcc).sort().forEach(function(t){
+    rows.push(['Etiqueta talla '+t,'',tallasAcc[t]+' u.']);
+  });
+  rows.push(['Etiqueta cuidados','',totalPrendas+' u.']);
+
+  // OTROS
+  rows.push(['— OTROS —','','']);
+  rows.push(['Ganchos plásticos','','—']);
+  rows.push(['Hilo','','—']);
+
   return rows;
 }
 
@@ -665,8 +669,15 @@ function renderTotales(){
     var rows=buildTallerRows(t);
     h+='<div class="taller-section"><div class="taller-head">'+t+'</div>';
     h+='<table class="mat-total-table"><thead><tr><th>Material</th><th>Detalle</th><th style="text-align:right">Total</th></tr></thead><tbody>';
-    if(rows.length<=1) h+='<tr><td colspan="3" style="padding:12px;text-align:center;color:var(--muted)">Sin materiales</td></tr>';
-    else for(var i=1;i<rows.length;i++) h+='<tr><td>'+rows[i][0]+'</td><td style="color:var(--muted)">'+rows[i][1]+'</td><td style="text-align:right;font-weight:600;color:var(--accent);font-family:DM Mono,monospace">'+rows[i][2]+'</td></tr>';
+    for(var i=1;i<rows.length;i++){
+      var r=rows[i];
+      var isSec=r[0].startsWith('—');
+      if(isSec){
+        h+='<tr><td colspan="3" style="background:var(--accent);color:white;padding:5px 14px;font-size:10px;font-weight:700;letter-spacing:0.1em">'+r[0].replace(/—/g,'').trim()+'</td></tr>';
+      } else {
+        h+='<tr><td style="font-weight:500">'+r[0]+'</td><td style="color:var(--muted);font-size:11px">'+r[1]+'</td><td style="text-align:right;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace">'+r[2]+'</td></tr>';
+      }
+    }
     h+='</tbody></table></div>';
   });
   document.getElementById('tot-content').innerHTML=h;
