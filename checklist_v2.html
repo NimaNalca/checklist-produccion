@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Producción</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+  const wb = XLSX.utils.book_new();
+
+  // Hoja 1: Checklist completo
+  const ckRows = [['Taller','T.N','Prenda','Cant.','Tipo Tela','Tela m','Tipo Botón','Color Botón','Cant. Botón','Tipo Elástico','Elástico m','Forro Bolsillo m','Broche Pant.','Botón Int.','Tipo Cierre','Cant. Cierre','Forro Abrigo m','Entretela m']];
+  items.forEach(it => {
+    const d=it.d; const cant=it.cantTotal; const s=state[it.idx];
+    ckRows.push([
+      it.taller, it.tn, it.bsale||it.prenda, cant,
+      it.tela,
+      d[0]?r2(d[0]*cant):'',
+      d[1]||'', it.color||'', d[2]?r2(d[2]*cant):'',
+      d[3]||'', d[4]?r2(d[4]*cant/100):'',
+      d[5]?r2(d[5]*cant):'',
+      d[6]?r2(d[6]*cant):'',
+      d[7]?r2(d[7]*cant):'',
+      d[8]||'', d[9]?r2(d[9]*cant):'',
+      d[10]?r2(d[10]*cant):'',
+      d[11]?r2(d[11]*cant):''
+    ]);
+  });
+  XLSX.utils.book_append_sheet(wb, makeSheet(ckRows,[10,8,22,6,14,8,10,10,10,12,10,14,10,10,10,10,14,10]), 'Checklist');
+
+  // Hoja 2 y 3: Resumen pendientes y disponibles
+  const pend = buildResumenRows('Pendiente');
+  const disp = buildResumenRows('Disponible');
+  if (pend.length > 1) XLSX.utils.book_append_sheet(wb, makeSheet(pend,[16,22,10,60]), 'Pendientes');
+  if (disp.length > 1) XLSX.utils.book_append_sheet(wb, makeSheet(disp,[16,22,10,60]), 'Disponibles');
+
+  // Hojas por taller
+  const tallers = [...new Set(items.map(it=>it.taller))];
+  tallers.forEach(t => {
+    const rows = buildTallerRows(t);
+    if (rows.length > 1) XLSX.utils.book_append_sheet(wb, makeSheet(rows,[16,22,10]), t.slice(0,31));
+  });
+
+  XLSX.writeFile(wb, 'Checklist_Produccion_Completo.xlsx');
+}
+
+
+;/, 'const DB = ' + dbJson + ';');
+  const blob = new Blob([src], {type: 'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'checklist_produccion.html';
+  a.click();
+}
+
+
+; block and replace it
+    var start = src.indexOf('const DB = {');
+    var end = src.indexOf('};', start) + 2;
+    if (start === -1) { alert('Error: no se encontró la base de datos en el HTML.'); return; }
+    var newSrc = src.slice(0, start) + 'const DB = ' + dbJson + ';' + src.slice(end);
+    var blob = new Blob([newSrc], {type: 'text/html;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'checklist_produccion.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  } catch(e) {
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+
+;', start) + 2;
+    if (start === -1) { alert('Error: no se encontró la base de datos.'); return; }
+    var newSrc = src.slice(0, start) + 'const DB = ' + dbJson + ';' + src.slice(end);
+
+    // Use data URI instead of blob — works in Chrome for local files
+    var dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(newSrc);
+    var a = document.createElement('a');
+    a.href = dataUri;
+    a.download = 'checklist_produccion.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+
+// ── EXPORTAR COMO TABLA COPIABLE ─────────────────────────────
+function abrirTabla(titulo, filas) {
+  // Show inline modal instead of popup
+  var existing = document.getElementById('export-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'export-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;width:90%;max-width:900px;max-height:85vh;display:flex;flex-direction:column;gap:12px';
+
+  var header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+  header.innerHTML = '<h3 style="font-size:15px;color:#2D4A3E;margin:0">' + titulo + '</h3>' +
+    '<button onclick="document.getElementById('export-modal').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#666">✕</button>';
+
+  var info = document.createElement('p');
+  info.style.cssText = 'font-size:12px;color:#666;margin:0;background:#f5f3ee;padding:10px 14px;border-radius:6px';
+  info.innerHTML = '📋 Selecciona toda la tabla de abajo → <strong>Cmd+A</strong> → <strong>Cmd+C</strong> → pega en Excel con <strong>Cmd+V</strong>';
+
+  var tableWrap = document.createElement('div');
+  tableWrap.style.cssText = 'overflow:auto;flex:1;border:1px solid #ddd;border-radius:8px';
+
+  var tbl = '<table style="border-collapse:collapse;width:100%;font-size:12px">';
+  filas.forEach(function(fila, i) {
+    if (fila.length === 1) {
+      tbl += '<tr><td colspan="20" style="background:#2D4A3E;color:white;padding:6px 12px;font-weight:600;font-size:11px;letter-spacing:0.08em">' + fila[0] + '</td></tr>';
+      return;
+    }
+    if (i === 0) {
+      tbl += '<thead><tr>' + fila.map(function(c){ return '<th style="background:#f0ede8;padding:7px 10px;text-align:left;border-bottom:2px solid #ddd;white-space:nowrap;font-size:11px;color:#555">' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+    } else {
+      var bg = i%2===0?'#fafafa':'#fff';
+      tbl += '<tr>' + fila.map(function(c){ return '<td style="padding:6px 10px;border-bottom:1px solid #f0ede8;background:' + bg + '">' + (c||'') + '</td>'; }).join('') + '</tr>';
+    }
+  });
+  tbl += '</tbody></table>';
+  tableWrap.innerHTML = tbl;
+
+  box.appendChild(header);
+  box.appendChild(info);
+  box.appendChild(tableWrap);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  // Close on background click
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+}
+
+function buildResumenRows(estado) {
+  var acc = {};
+  items.forEach(function(it) {
+    var s = state[it.idx];
+    Object.keys(MAT_LABELS).forEach(function(campo) {
+      if (s[campo] !== estado) return;
+      var det = matDetalle(it, campo);
+      var cantStr = matCantidad(it, campo);
+      if (!cantStr) return;
+      var numMatch = cantStr.match(/^([\d.]+)\s*(.*)/);
+      var num = numMatch ? parseFloat(numMatch[1]) : 0;
+      var unit = numMatch ? numMatch[2].trim() : '';
+      var key = campo + '||' + det;
+      if (!acc[key]) acc[key] = {mat: MAT_LABELS[campo], det: det, total: 0, unit: unit, prendas: []};
+      acc[key].total = r2(acc[key].total + num);
+      acc[key].prendas.push(it.bsale||it.prenda);
+    });
+  });
+  var rows = [['Material','Detalle','Total','Prendas']];
+  Object.keys(MAT_LABELS).forEach(function(campo) {
+    Object.values(acc).filter(function(r){ return r.mat===MAT_LABELS[campo]; }).forEach(function(r) {
+      rows.push([r.mat, r.det, r.total+' '+r.unit, r.prendas.join(', ')]);
+    });
+  });
+  return rows;
+}
+
+function buildTallerRows(tallerName) {
+  var its = items.filter(function(it){ return it.taller===tallerName; });
+  var acc = {};
+  its.forEach(function(it) {
+    var d=it.d; var cant=it.cantTotal;
+    function add(label,det,num,unit){
+      if(!num) return;
+      var key=label+'||'+det;
+      if(!acc[key]) acc[key]={label:label,det:det,total:0,unit:unit};
+      acc[key].total=r2(acc[key].total+num);
+    }
+    if(d[0])  add('Tela',           it.tela||'—',                          r2(d[0]*cant),     'm');
+    if(d[2])  add('Botón',          (d[1]||'')+(it.color?' '+it.color:''), r2(d[2]*cant),     'u.');
+    if(d[4])  add('Elástico',       d[3]||'—',                             r2(d[4]*cant/100), 'm');
+    if(d[5])  add('Forro bolsillo', '—',                                   r2(d[5]*cant),     'm');
+    if(d[6])  add('Broche pant.',   '—',                                   r2(d[6]*cant),     'u.');
+    if(d[7])  add('Botón int.',     '—',                                   r2(d[7]*cant),     'u.');
+    if(d[9])  add('Cierre',         d[8]||'—',                             r2(d[9]*cant),     'u.');
+    if(d[10]) add('Forro abrigo',   '—',                                   r2(d[10]*cant),    'm');
+    if(d[11]) add('Entretela',      '—',                                   r2(d[11]*cant),    'm');
+  });
+  var rows = [['Material','Detalle','Total']];
+  Object.values(acc).forEach(function(r){ rows.push([r.label, r.det, r.total+' '+r.unit]); });
+  return rows;
+}
+
+function exportResumen() {
+  if (!items.length) { alert('Genera el checklist primero.'); return; }
+  var pend = buildResumenRows('Pendiente');
+  var disp = buildResumenRows('Disponible');
+  var todas = [['PENDIENTES']].concat(pend).concat([[]]).concat([['DISPONIBLES']]).concat(disp);
+  abrirTabla('Resumen Compra', todas);
+}
+
+function exportTotales() {
+  if (!items.length) { alert('Genera el checklist primero.'); return; }
+  var tallers = [...new Set(items.map(function(it){ return it.taller; }))];
+  var todas = [];
+  tallers.forEach(function(t) {
+    todas.push([t.toUpperCase()]);
+    buildTallerRows(t).forEach(function(r){ todas.push(r); });
+    todas.push([]);
+  });
+  abrirTabla('Materiales por Taller', todas);
+}
+
+function exportTodo() {
+  if (!items.length) { alert('Genera el checklist primero.'); return; }
+  var filas = [['Taller','T.N','Prenda','Cant.','Tipo Tela','Tela m','Tipo Botón','Color Botón','Cant. Botón','Tipo Elástico','Elástico m','Forro Bolsillo m','Broche Pant.','Botón Int.','Tipo Cierre','Cant. Cierre','Forro Abrigo m','Entretela m','Estado Tela','Estado Botón','Estado Elástico','Estado Forro','Estado Broche','Estado Botón Int.','Estado Cierre','Estado Forro Abrigo','Estado Entretela']];
+  items.forEach(function(it) {
+    var d=it.d; var cant=it.cantTotal; var s=state[it.idx];
+    filas.push([
+      it.taller, it.tn, it.bsale||it.prenda, cant,
+      it.tela, d[0]?r2(d[0]*cant):'',
+      d[1]||'', it.color||'', d[2]?r2(d[2]*cant):'',
+      d[3]||'', d[4]?r2(d[4]*cant/100):'',
+      d[5]?r2(d[5]*cant):'', d[6]?r2(d[6]*cant):'', d[7]?r2(d[7]*cant):'',
+      d[8]||'', d[9]?r2(d[9]*cant):'', d[10]?r2(d[10]*cant):'', d[11]?r2(d[11]*cant):'',
+      s.tela, s.boton, s.elastico, s.forroBollo, s.brochePant, s.botonInt, s.cierre, s.forroAbrigo, s.entretela
+    ]);
+  });
+  abrirTabla('Checklist Completo', filas);
+}
+
+
+function saveHTML() {
+  var dbJson = JSON.stringify(DB, null, 2);
+  var existing = document.getElementById('export-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'export-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;width:90%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;gap:12px';
+
+  box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
+    '<h3 style="font-size:15px;color:#2D4A3E;margin:0">Base de datos guardada en localStorage ✓</h3>' +
+    '<button onclick="document.getElementById('export-modal').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#666">✕</button>' +
+    '</div>' +
+    '<p style="font-size:13px;color:#2D4A3E;background:#e8f0ec;padding:12px 16px;border-radius:8px;margin:0">✅ Los cambios se guardan automáticamente en este navegador. La próxima vez que abras esta URL, la base de datos estará actualizada.</p>' +
+    '<p style="font-size:12px;color:#666;margin:0">Si quieres compartir los cambios con otras personas, copia el JSON de abajo y envíalo para que lo importen:</p>' +
+    '<textarea style="width:100%;height:200px;font-family:monospace;font-size:11px;border:1px solid #ddd;border-radius:6px;padding:10px;resize:none" readonly>' + dbJson + '</textarea>';
+
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+
+  // Actually save to localStorage
+  saveDBLocal();
+}
+
+</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --border: #DDD9D0;
+  --text: #1A1814;
+  --muted: #7A7670;
+  --accent: #2D4A3E;
+  --accent-light: #E8F0EC;
+  --pend: #7A3B1E;
+  --pend-bg: #FDF0E8;
+  --pend-border: #E8B896;
+  --disp: #1A4A2E;
+  --disp-bg: #E8F5ED;
+  --disp-border: #96D4A8;
+  --na: #7A7670;
+  --na-bg: #F0EDE8;
+  --na-border: #C8C4BC;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
+
+/* HEADER */
+.header { background: var(--accent); color: white; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 15px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+.header-sub { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+/* TABS */
+.tabs { display: flex; gap: 0; border-bottom: 1.5px solid var(--border); background: var(--surface); padding: 0 24px; }
+.tab { padding: 12px 18px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1.5px; transition: all 0.15s; letter-spacing: 0.04em; text-transform: uppercase; }
+.tab:hover { color: var(--text); }
+.tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* PANELS */
+.panel { display: none; padding: 20px 24px; }
+.panel.on { display: block; }
+
+/* PEDIDO INPUT */
+.pedido-wrap { max-width: 800px; }
+.label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.paste-area { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.paste-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.paste-box-head { padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+textarea { width: 100%; min-height: 220px; border: none; padding: 12px 14px; font-size: 12px; font-family: 'DM Mono', monospace; background: var(--surface); color: var(--text); resize: vertical; outline: none; line-height: 1.5; }
+.btn-primary { padding: 10px 24px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.85; }
+.info-box { background: var(--accent-light); border: 1px solid #B8D4C4; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--accent); margin-bottom: 16px; line-height: 1.6; }
+.info-box strong { font-weight: 600; }
+
+/* TABLE */
+.tbl-outer { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+thead tr th { padding: 0; }
+.th-group { background: var(--accent); color: white; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; padding: 6px 8px; border-right: 1px solid rgba(255,255,255,0.15); white-space: nowrap; }
+.th-sub { background: #F0EDE8; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 7px; border-bottom: 1.5px solid var(--border); border-right: 1px solid var(--border); text-align: center; white-space: nowrap; }
+.th-sub.left { text-align: left; }
+tbody td { padding: 6px 8px; border-bottom: 1px solid #EDE9E2; border-right: 1px solid #EDE9E2; vertical-align: middle; font-size: 12px; }
+tbody td.grp-start { border-left: 2.5px solid var(--accent) !important; }
+thead th.grp-start { border-left: 2.5px solid rgba(255,255,255,0.5) !important; }
+tbody td.left { text-align: left; }
+tbody td.center { text-align: center; }
+tbody td.qty { text-align: center; font-family: 'DM Mono', monospace; font-weight: 600; font-size: 12px; }
+tbody td.num { text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); white-space: nowrap; }
+/* Alternating taller colors */
+tr.taller-a td { background: #FFFFFF; }
+tr.taller-b td { background: #F5F3EE; }
+tr.taller-a:hover td, tr.taller-b:hover td { background: #EAF0EC; }
+.sec-row td { background: var(--accent) !important; color: white; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; }
+.prenda-name { font-weight: 500; color: var(--text); font-size: 12px; }
+/* Compact column widths */
+table { table-layout: fixed; }
+col.c-taller  { width: 70px; }
+col.c-tn      { width: 52px; }
+col.c-prenda  { width: 175px; }
+col.c-cant    { width: 42px; }
+col.c-tipotel { width: 100px; }
+col.c-metros  { width: 52px; }
+col.c-estado  { width: 100px; }
+col.c-tipo    { width: 52px; }
+col.c-color   { width: 65px; }
+col.c-cantnum { width: 42px; }
+col.c-cipt    { width: 52px; }
+
+/* STATUS SELECT */
+select.st { font-size: 11px; font-family: 'DM Sans', sans-serif; font-weight: 500; border-radius: 5px; padding: 4px 4px; cursor: pointer; width: 90px; border: 1px solid; appearance: none; text-align: center; transition: all 0.15s; }
+select.st.na { background: var(--na-bg); color: var(--na); border-color: var(--na-border); }
+select.st.disp { background: var(--disp-bg); color: var(--disp); border-color: var(--disp-border); }
+select.st.pend { background: var(--pend-bg); color: var(--pend); border-color: var(--pend-border); }
+
+/* CALC CELL */
+.calc { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; }
+.calc.has-val { color: var(--text); font-weight: 500; }
+
+/* RESUMEN */
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.res-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+.res-card-head { background: var(--accent); color: white; padding: 12px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.res-card-body { padding: 0; }
+.res-mat-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.res-mat-row:last-child { border-bottom: none; }
+.res-mat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); min-width: 90px; padding-top: 2px; }
+.res-prendas { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+.pill.pend { background: var(--pend-bg); color: var(--pend); border: 1px solid var(--pend-border); }
+.pill.disp { background: var(--disp-bg); color: var(--disp); border: 1px solid var(--disp-border); }
+.pill.mat { background: #F0EDE8; color: var(--text); border: 1px solid var(--border); }
+.empty-res { padding: 30px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* MATERIALES TOTALES */
+.taller-section { margin-bottom: 20px; }
+.taller-head { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); padding: 8px 16px; background: var(--accent-light); border-radius: 6px; margin-bottom: 8px; border: 1px solid #B8D4C4; }
+.mat-total-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.mat-total-table th { background: #F7F5F0; padding: 8px 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); }
+.mat-total-table td { padding: 8px 14px; border-bottom: 1px solid #F0EDE8; font-size: 12px; }
+.mat-total-table tr:last-child td { border-bottom: none; }
+.mat-name { font-weight: 500; color: var(--text); }
+.mat-detail { color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; }
+
+#msg { font-size: 12px; color: var(--muted); margin-top: 8px; font-family: 'DM Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header h1" style="font-family:'DM Mono',monospace;font-size:15px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;color:white">Checklist Producción</div>
+    <div class="header-sub">Sistema de control de materiales por pedido</div>
+  </div>
+  <button onclick="exportTodo()" style="padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.12);color:white;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.04em">📋 Ver todo para copiar</button>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="tab('pedido')">Pedido</div>
+  <div class="tab" onclick="tab('checklist')">Checklist</div>
+  <div class="tab" onclick="tab('resumen')">Resumen compra</div>
+  <div class="tab" onclick="tab('totales')">Materiales por taller</div>
+  <div class="tab" onclick="tab('db')">Base de datos</div>
+</div>
+
+<!-- PEDIDO -->
+<div id="p-pedido" class="panel on">
+  <div class="pedido-wrap">
+    <div class="info-box">
+      <strong>¿Cómo usar?</strong> Pega el pedido en el área de texto. Las columnas deben ser: <strong>Col A</strong> = #pedido · <strong>Col B</strong> = Taller · <strong>Col C</strong> = T.N · <strong>Col D</strong> = Prenda · <strong>Col E</strong> = Tela · <strong>Col F</strong> = Nombre BSALE · luego <strong>S M L 36 38 40 42 44 1 2 TU · Cantidad Total</strong>. Pega el contenido copiado de tu Excel directamente aquí.
+    </div>
+    <div class="label">Pega el pedido aquí (texto separado por tabulaciones):</div>
+    <textarea id="tin" placeholder="Copia y pega el contenido de tu hoja PEDIDO directamente desde Excel/Google Sheets...&#10;&#10;Ejemplo:&#10;#5	BORIS	B5	TOP NES	CUPRO VERDE	TOP NES DUO B/N	...	8&#10;#5	BORIS	B5	CARDIGAN MEL	CUPRO ROJO	CARDIGAN DAN CRUDO	...	10"></textarea>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
+      <button class="btn-primary" onclick="cargar()">Generar checklist</button>
+      <span id="msg"></span>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div id="p-checklist" class="panel">
+  <div class="tbl-outer">
+    <table id="ck-table">
+      <colgroup>
+        <col class="c-taller"><col class="c-tn"><col class="c-prenda"><col class="c-cant"><col class="c-tipotel">
+        <col class="c-metros"><col class="c-estado">
+        <col class="c-tipo"><col class="c-color"><col class="c-cantnum"><col class="c-estado">
+        <col class="c-tipo"><col class="c-metros"><col class="c-estado">
+        <col class="c-metros"><col class="c-estado">
+        <col class="c-cantnum"><col class="c-estado">
+        <col class="c-cantnum"><col class="c-estado">
+        <col class="c-cipt"><col class="c-cantnum"><col class="c-estado">
+        <col class="c-metros"><col class="c-estado">
+        <col class="c-metros"><col class="c-estado">
+      </colgroup>
+      <thead>
+        <tr id="thead-group">
+          <th class="th-group" colspan="5" style="text-align:left">Info prenda</th>
+          <th class="th-group" colspan="2">Tela</th>
+          <th class="th-group" colspan="4">Botón</th>
+          <th class="th-group" colspan="3">Elástico</th>
+          <th class="th-group" colspan="2">Forro bolsillo</th>
+          <th class="th-group" colspan="2">Broche pant.</th>
+          <th class="th-group" colspan="2">Botón int. pant.</th>
+          <th class="th-group" colspan="3">Cierre</th>
+          <th class="th-group" colspan="2">Forro abrigo</th>
+          <th class="th-group" colspan="2">Entretela</th>
+        </tr>
+        <tr>
+          <th class="th-sub left">Taller</th>
+          <th class="th-sub left">T.N</th>
+          <th class="th-sub left">Prenda (BSALE)</th>
+          <th class="th-sub">Cant.</th>
+          <!-- Tela -->
+          <th class="th-sub left grp-start">Tipo tela</th>
+          <th class="th-sub">Metros</th>
+          <th class="th-sub">Estado</th>
+          <!-- Botón -->
+          <th class="th-sub grp-start">Tipo</th>
+          <th class="th-sub">Color</th>
+          <th class="th-sub">Cant.</th>
+          <th class="th-sub">Estado</th>
+          <!-- Elástico -->
+          <th class="th-sub grp-start">Tipo</th>
+          <th class="th-sub">Metros</th>
+          <th class="th-sub">Estado</th>
+          <!-- Forro bolsillo -->
+          <th class="th-sub grp-start">Metros</th>
+          <th class="th-sub">Estado</th>
+          <!-- Broche pant -->
+          <th class="th-sub grp-start">Cant.</th>
+          <th class="th-sub">Estado</th>
+          <!-- Botón int pant -->
+          <th class="th-sub grp-start">Cant.</th>
+          <th class="th-sub">Estado</th>
+          <!-- Cierre -->
+          <th class="th-sub grp-start">Tipo</th>
+          <th class="th-sub">Cant.</th>
+          <th class="th-sub">Estado</th>
+          <!-- Forro abrigo -->
+          <th class="th-sub grp-start">Metros</th>
+          <th class="th-sub">Estado</th>
+          <!-- Entretela -->
+          <th class="th-sub grp-start">Metros</th>
+          <th class="th-sub">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="ck-body">
+        <tr><td colspan="27" style="padding:30px;text-align:center;color:var(--muted)">Carga un pedido en la pestaña "Pedido"</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- RESUMEN COMPRA -->
+<div id="p-resumen" class="panel">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn-primary" onclick="exportResumen()">⬇ Descargar Excel</button></div>
+  <div id="rs-content"><div class="empty-res">Sin datos aún</div></div>
+</div>
+
+<!-- BASE DE DATOS -->
+<div id="p-db" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div class="label">Base de datos de modelos</div>
+    <button class="btn-primary" onclick="addDbRow()">+ Agregar modelo</button>
+    <button class="btn-primary" onclick="saveHTML()" style="background:#1a3a2e">⬇ Guardar HTML actualizado</button>
+  </div>
+  <div class="tbl-outer" style="max-height:70vh;overflow-y:auto">
+    <table id="db-table" style="min-width:900px">
+      <thead>
+        <tr>
+          <th class="th-sub left" style="min-width:240px;width:240px">Modelo</th>
+          <th class="th-sub">Tela (m)</th>
+          <th class="th-sub">Tipo botón</th>
+          <th class="th-sub">Cant. botón</th>
+          <th class="th-sub">Tipo elástico</th>
+          <th class="th-sub">Metro elástico</th>
+          <th class="th-sub">Forro bolsillo</th>
+          <th class="th-sub">Broche pant.</th>
+          <th class="th-sub">Botón int.</th>
+          <th class="th-sub">Tipo cierre</th>
+          <th class="th-sub">Cant. cierre</th>
+          <th class="th-sub">Forro abrigo</th>
+          <th class="th-sub">Entretela</th>
+          <th class="th-sub">Acción</th>
+        </tr>
+      </thead>
+      <tbody id="db-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MATERIALES TOTALES POR TALLER -->
+<div id="p-totales" class="panel">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn-primary" onclick="exportTotales()">⬇ Descargar Excel</button></div>
+  <div id="tot-content"><div class="empty-res">Sin datos aún</div></div>
+</div>
+
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  document.body.insertAdjacentHTML('afterbegin', 
+    '<div style="background:red;color:white;padding:10px;font-size:13px;position:fixed;top:0;left:0;right:0;z-index:99999">ERROR JS: ' + msg + ' (línea ' + line + ')</div>'
+  );
+  return false;
+};
+// ── BASE DE DATOS DE MODELOS ─────────────────────────────────
+// Columnas: [metrosTela, tipBoton, cantBoton, tipoElastico, metroElastico, forroBollo, brochePant, botonIntPant, tipCierre, cantCierre, forroAbrigo, entretela]
+const DB = {
+"ABRIGO AIA":[2.2,'36"',2,null,null,null,null,null,null,null,2,1],
+"ABRIGO FEI":[2,'BROCHE',2,null,null,null,null,null,null,null,1.7,1.3],
+"ABRIGO GAN":[2.2,'36"',3,null,null,null,null,null,null,null,2,1],
+"ABRIGO INA":[2.2,'BROCHE',2,null,null,null,null,null,null,null,1.9,1.8],
+"ABRIGO NEU":[2.5,'40"',4,null,null,null,null,null,null,null,2.3,null],
+"ABRIGO NIO":[2.6,'32"',7,null,null,null,null,null,null,null,2.3,0.8],
+"ABRIGO TAE":[2.4,'40"',4,null,null,null,null,null,null,null,2,1],
+"ABRIGO TAE CUADROS":[2.4,'40"',4,null,null,null,null,null,null,null,2,2],
+"BERMUDA RAM":[1.2,null,null,null,null,null,1,1,null,1,null,null],
+"BLAZER FEI":[1.7,'BROCHE',2,null,null,null,null,null,null,null,1.4,1.1],
+"BLAZER NIL":[1.75,'32"',3,null,null,null,null,null,null,null,1.4,1.4],
+"BLAZER RAM":[1.25,'32"',2,null,null,null,null,null,null,null,1.1,null],
+"BLUSA BEA":[1,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA BEL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"BLUSA ELA":[1,null,null,2,0.5,null,null,null,null,null,null,null],
+"BLUSA LEAN":[1,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA MON":[1.3,null,null,null,null,null,null,null,null,null,null,null],
+"BLUSA NEL":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA OBA":[1,'18"',2,null,null,null,null,null,null,null,null,null],
+"BLUSA RAN":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA SIM":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BUFANDA VARA BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISA ABI":[1.2,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA ACI":[1.7,'18"',13,null,null,null,null,null,null,null,null,null],
+"CAMISA BIA":[1.4,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA BIB":[1.2,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA CAO":[1.4,'18"',10,null,null,null,null,null,null,null,null,null],
+"CAMISA COE":[1.6,'18"',12,null,null,null,null,null,null,null,null,null],
+"CAMISA DIS":[1.7,'18"',9,null,null,null,null,null,null,null,null,null],
+"CAMISA EFC":[1.8,'18"',10,null,null,null,null,null,null,null,null,null],
+"CAMISA GEA":[1.5,'18"',7,null,null,null,null,null,null,null,null,null],
+"CAMISA GLO":[1.3,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA IFA":[1.35,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAM":[1.4,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAU":[1.6,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAY":[1.6,'18"',12,null,null,null,null,null,null,null,null,null],
+"CAMISA MUN":[1.5,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA MUO":[1.5,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA NAR":[1.5,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAMISA NEC":[1.4,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA RAM":[1.5,'16"',8,null,null,null,null,null,null,null,null,null],
+"CAMISA RAT":[1.5,'16"',11,null,null,null,null,null,null,null,null,null],
+"CAMISA SAI":[1.5,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA TUC":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA ADE":[1.1,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA BEATLE LIU":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA MIL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISÓN ALI":[1.8,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAMISÓN CAI":[1.8,'18"',14,null,null,null,null,null,null,null,null,null],
+"CAMISÓN EFE":[2,'18"',11,null,null,null,null,null,null,null,null,null],
+"CAMISÓN MUO":[2,'18"',9,null,null,null,null,null,null,null,null,null],
+"CAMISÓN NEC":[2,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAPA BEB":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"CAPA BEB M/LARGA":[1.3,null,null,null,null,null,null,null,null,null,null,null],
+"CAPA LIN":[2.8,null,null,null,null,null,null,null,null,null,1,null],
+"CARDIGAN DAN BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN DAN GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN MEL BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN MEL GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN NUR BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN NUR GLORIA":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO CAS BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO CAS GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO DAE":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO NES GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"CHAQUETA AIA":[1.75,'36"',2,null,1,null,null,null,null,null,1.5,null],
+"CHAQUETA CEU":[1.5,'28"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETA CIT":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+"CHAQUETA COE":[1.8,'32"',9,null,null,null,null,null,null,null,null,null],
+"CHAQUETA GAN":[1.7,'36"',3,null,1,null,null,null,null,null,1.5,null],
+"CHAQUETA GOA":[1.4,'24"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETA NIO":[2.2,'BROCHE',9,null,1,null,null,null,null,null,null,null],
+"CHAQUETA NOG":[1.5,'28"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETÓN FEI":[2,'BROCHE',2,null,null,null,null,null,null,null,1.8,1.8],
+"ENTERITO ADI":[2.4,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO CAM M/ LARGA":[2.5,'20"',8,null,null,null,null,null,null,null,null,null],
+"ENTERITO CAM M/CORTA":[2.2,'20"',7,null,null,null,null,null,null,null,null,null],
+"ENTERITO LAS":[2,null,null,'cierre',null,null,null,null,null,null,null,null],
+"ENTERITO ORI":[2,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO RIO":[2,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO SUO":[2,null,null,null,null,null,null,null,null,1,null,null],
+"FALDA APA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"FALDA CAR":[2,'24"',2,null,null,null,null,null,null,null,null,null],
+"FALDA IKA":[1.6,'32"',1,null,null,0.3,1,1,null,1,null,null],
+"FALDA IRO":[0.8,'24"',2,null,null,null,null,2,null,null,null,null],
+"FALDA IRO ALGOCEL":[0.8,'24"',2,null,null,null,null,null,null,null,null,null],
+"FALDA KEA":[1.6,'32"',1,null,null,null,null,null,null,1,null,null],
+"FALDA MIN":[0.5,'32"',1,null,null,0.2,null,1,null,1,null,null],
+"FALDA RAO":[1.7,'24"',7,null,null,null,null,null,null,null,null,null],
+"JARDINERA JUN":[2,'24"',2,2,25,null,null,null,null,null,null,null],
+"KIMONO RAL":[2,null,null,null,null,null,null,null,null,null,null,null],
+"PANTALON ARA":[1.5,null,null,null,null,0.5,null,4,null,1,null,null],
+"PANTALÓN ARI":[1.4,null,null,null,null,0.4,null,null,null,1,null,null],
+"PANTALÓN BON":[2,null,null,null,null,0.5,1,1,null,1,null,null],
+"PANTALÓN IBO":[1.4,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALON IBO":[1.4,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN ILA":[1.7,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN IRE":[1.4,null,null,null,null,0.4,null,null,null,1,null,null],
+"PANTALÓN JAS":[1.2,null,null,null,null,0.4,1,null,null,1,null,null],
+"PANTALON JAS":[1.2,null,null,null,null,0.4,1,null,null,1,null,null],
+"PANTALÓN JIN":[1.4,null,null,null,null,0.4,null,1,null,1,null,null],
+"PANTALÓN LUI":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"PANTALON LUI":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"PANTALÓN MOY":[1.5,null,null,4,65,null,null,null,null,null,null,null],
+"PANTALÓN PEM":[1.5,null,null,4,80,null,null,null,null,null,null,null],
+"PANTALÓN RAM":[1.5,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN TAB":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"POLERA ADE":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA ELO GLORIA":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA GRA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA LAI":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MAI":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MER":[1.15,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MOR":[1.25,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA NEI":[0.88,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA OVE":[1.8,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA SUO":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA TAR":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA TEO":[1.7,null,null,3.5,160,null,null,null,null,null,null,null],
+"POLERA VIG":[1,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA VIR":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA ZIN":[1,null,null,null,null,null,null,null,null,null,null,null],
+"SHORT LAO":[1,null,null,null,null,0.5,1,1,null,1,null,null],
+"SWEATER ARA BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES ALGODÓN BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES ALPACA BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES DUO BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES DUO GLORIA":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER IDE":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NEM TALLA1 BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NEM TALLA2 BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NUR BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NUR LANA BORIS":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER OME BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER OME GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP ATO":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"TOP CRU":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"TOP DAN":[0.8,'18"',2,null,null,null,null,null,null,null,null,null],
+"TOP DIS":[0.8,'18"',3,null,null,null,null,null,null,null,null,null],
+"TOP ELA":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"TOP JOI":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"TOP LEA":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP NAL":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP NES":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NES DUO BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NES DUO GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NIA BORIS":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NIA GLORIA":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"TOP REN":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP SIM":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP TAO":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"TOP VAO":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"VEST BEB":[1,'24"',2,null,null,null,null,null,null,null,null,null],
+"VESTIDO ATO":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO BAL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO BEA":[1.5,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO CAM":[2.2,'18"',5,null,42,null,null,null,null,null,null,null],
+"VESTIDO CRU":[2.9,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO ELA":[1.5,null,null,2,45,null,null,null,null,null,null,null],
+"VESTIDO FEL":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO FOE":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO GAL":[1.8,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO GAL MANGA LARGA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO IAL":[2.2,'16"',2,2,7,null,null,null,null,null,null,null],
+"VESTIDO IFA":[2,'18"',8,null,null,null,null,null,null,null,null,null],
+"VESTIDO IFA M/LARGA":[2,'18"',12,null,null,null,null,null,null,null,null,null],
+"VESTIDO IGA":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO IMA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO KOA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO LEN":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LEN LANA":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIA M/CORTA":[2,'18"',9,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIA M/LARGA":[2.2,'18"',9,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIN":[2.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO LON":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LUEA":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO MON":[1.6,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PEU":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PIN LINOTO":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PIN TENCEL":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO REN":[1.5,null,null,2,8,null,null,null,null,null,null,null],
+"VESTIDO VAO":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+};
+
+// State: items array + status per item per material
+let items = [];
+let state = {}; // state[i] = {tela, boton, elastico, forroBollo, brochePant, botonInt, cierre, forroAbrigo, entretela}
+const ESTADOS = ['No aplica','Disponible','Pendiente'];
+
+function normalize(s) {
+  return (s||'').trim().toUpperCase().replace(/\s+/g,' ');
+}
+
+function lookupDB(nombre) {
+  const n = normalize(nombre);
+  if (!n) return null;
+  // 1. Exact match
+  for (const key of Object.keys(DB)) {
+    if (normalize(key) === n) return DB[key];
+  }
+  // 2. Name starts with DB key — longest key first (best match)
+  const sorted = Object.keys(DB).sort((a,b)=>b.length-a.length);
+  for (const key of sorted) {
+    if (n.startsWith(normalize(key))) return DB[key];
+  }
+  // 3. DB key starts with name
+  for (const key of sorted) {
+    if (normalize(key).startsWith(n)) return DB[key];
+  }
+  return null;
+}
+
+function lookupByPrenda(prenda) {
+  return lookupDB(prenda);
+}
+
+function cargar() {
+  const raw = document.getElementById('tin').value.trim();
+  if (!raw) return;
+  items = []; state = {};
+
+  const lines = raw.split('\n');
+  for (const line of lines) {
+    const cols = line.split('\t');
+    if (cols.length < 4) continue;
+    const prenda   = (cols[3]||'').trim();
+    const tela     = (cols[4]||'').trim();
+    const bsale    = (cols[5]||'').trim();
+    const taller   = (cols[1]||'').trim();
+    const tn       = (cols[2]||'').trim();
+    if (!prenda || prenda.toUpperCase()==='PRENDA') continue; // skip header
+    const cantTotal= parseFloat(cols[cols.length-1]) || 0;
+    if (!cantTotal) continue;
+
+    // Color para botón = última palabra del nombre BSALE
+    const bsaleWords = (bsale||prenda).trim().split(/\s+/);
+    const color = bsaleWords[bsaleWords.length-1] || '';
+
+    // Lookup DB by BSALE name first, then prenda
+    let d = bsale ? lookupDB(bsale) : null;
+    if (!d) d = lookupByPrenda(prenda);
+    if (!d) d = [null,null,null,null,null,null,null,null,null,null,null,null];
+
+    const idx = items.length;
+    items.push({ idx, taller, tn, prenda, tela, bsale: bsale||prenda, cantTotal, color, d });
+
+    // Initialize state: derive default based on DB value
+    const def = v => v ? 'Pendiente' : 'No aplica';
+    state[idx] = {
+      tela:        d[0] ? 'Pendiente' : 'No aplica',
+      boton:       d[2] ? 'Pendiente' : 'No aplica',
+      elastico:    (d[3]||d[4]) ? 'Pendiente' : 'No aplica',
+      forroBollo:  d[5] ? 'Pendiente' : 'No aplica',
+      brochePant:  d[6] ? 'Pendiente' : 'No aplica',
+      botonInt:    d[7] ? 'Pendiente' : 'No aplica',
+      cierre:      d[9] ? 'Pendiente' : 'No aplica',
+      forroAbrigo: d[10]? 'Pendiente' : 'No aplica',
+      entretela:   d[11]? 'Pendiente' : 'No aplica',
+    };
+  }
+
+  document.getElementById('msg').textContent = items.length + ' prendas cargadas.';
+  renderCk();
+  tab('checklist');
+}
+
+function r2(n) { return n != null ? (Math.round(n*100)/100) : null; }
+
+function renderCk() {
+  let html = '';
+  let curTN = '';
+  let tallerColors = {};
+  let colorIdx = 0;
+  for (const it of items) {
+    if (!(it.taller in tallerColors)) {
+      tallerColors[it.taller] = colorIdx++ % 2 === 0 ? 'taller-a' : 'taller-b';
+    }
+    if (it.tn !== curTN) {
+      curTN = it.tn;
+      html += `<tr class="sec-row"><td colspan="27">${it.taller} — ${it.tn}</td></tr>`;
+    }
+    const d = it.d;
+    const idx = it.idx;
+    const cant = it.cantTotal;
+
+    // Calculated quantities
+    const mTela    = d[0]  ? r2(d[0]*cant)  : null;
+    const cantBtn  = d[2]  ? r2(d[2]*cant)  : null;
+    const mElas    = d[4]  ? r2(d[4]*cant/100) : null;
+    const mForroBo = d[5]  ? r2(d[5]*cant)  : null;
+    const cantBroch= d[6]  ? r2(d[6]*cant)  : null;
+    const cantBInt = d[7]  ? r2(d[7]*cant)  : null;
+    const cantCier = d[9]  ? r2(d[9]*cant)  : null;
+    const mForroA  = d[10] ? r2(d[10]*cant) : null;
+    const mEntret  = d[11] ? r2(d[11]*cant) : null;
+
+    const s = state[idx];
+
+    html += `<tr class="${tallerColors[it.taller]}">
+      <td class="left">${it.taller}</td>
+      <td class="left">${it.tn}</td>
+      <td class="left"><div class="prenda-name">${it.bsale||it.prenda}</div></td>
+      <td class="qty">${cant}</td>
+      <td class="left grp-start" style="font-size:11px;color:var(--muted)">${it.tela}</td>
+      <!-- Tela -->
+      <td class="num${mTela?' has-val':''}">${mTela!=null?mTela+'m':'—'}</td>
+      <td>${selHtml(idx,'tela',s.tela)}</td>
+      <!-- Botón -->
+      <td class="num grp-start${d[1]?' has-val':''}">${d[1]||'—'}</td>
+      <td class="num">${it.color||'—'}</td>
+      <td class="num${cantBtn?' has-val':''}">${cantBtn!=null?cantBtn:'—'}</td>
+      <td>${selHtml(idx,'boton',s.boton)}</td>
+      <!-- Elástico -->
+      <td class="num grp-start${d[3]?' has-val':''}">${d[3]||'—'}</td>
+      <td class="num${mElas?' has-val':''}">${mElas!=null?mElas+'m':'—'}</td>
+      <td>${selHtml(idx,'elastico',s.elastico)}</td>
+      <!-- Forro bolsillo -->
+      <td class="num grp-start${mForroBo?' has-val':''}">${mForroBo!=null?mForroBo+'m':'—'}</td>
+      <td>${selHtml(idx,'forroBollo',s.forroBollo)}</td>
+      <!-- Broche pant -->
+      <td class="num grp-start${cantBroch?' has-val':''}">${cantBroch!=null?cantBroch:'—'}</td>
+      <td>${selHtml(idx,'brochePant',s.brochePant)}</td>
+      <!-- Botón int pant -->
+      <td class="num grp-start${cantBInt?' has-val':''}">${cantBInt!=null?cantBInt:'—'}</td>
+      <td>${selHtml(idx,'botonInt',s.botonInt)}</td>
+      <!-- Cierre -->
+      <td class="num grp-start${d[8]?' has-val':''}">${d[8]||'—'}</td>
+      <td class="num${cantCier?' has-val':''}">${cantCier!=null?cantCier:'—'}</td>
+      <td>${selHtml(idx,'cierre',s.cierre)}</td>
+      <!-- Forro abrigo -->
+      <td class="num grp-start${mForroA?' has-val':''}">${mForroA!=null?mForroA+'m':'—'}</td>
+      <td>${selHtml(idx,'forroAbrigo',s.forroAbrigo)}</td>
+      <!-- Entretela -->
+      <td class="num grp-start${mEntret?' has-val':''}">${mEntret!=null?mEntret+'m':'—'}</td>
+      <td>${selHtml(idx,'entretela',s.entretela)}</td>
+    </tr>`;
+  }
+  document.getElementById('ck-body').innerHTML = html || '<tr><td colspan="27" style="padding:30px;text-align:center;color:var(--muted)">Sin prendas</td></tr>';
+}
+
+function selHtml(idx, campo, val) {
+  const cls = val==='Disponible'?'disp':val==='Pendiente'?'pend':'na';
+  if (val === 'No aplica') {
+    return `<select class="st na" onchange="setSt(${idx},'${campo}',this)">
+      <option selected>No aplica</option>
+    </select>`;
+  }
+  return `<select class="st ${cls}" onchange="setSt(${idx},'${campo}',this)">
+    <option${val==='Pendiente'?' selected':''}>Pendiente</option>
+    <option${val==='Disponible'?' selected':''}>Disponible</option>
+  </select>`;
+}
+
+function setSt(idx, campo, sel) {
+  state[idx][campo] = sel.value;
+  sel.className = 'st '+(sel.value==='Disponible'?'disp':'pend');
+}
+
+// ── RESUMEN COMPRA ────────────────────────────────────────────
+const MAT_LABELS = {
+  tela:'Tela', boton:'Botón', elastico:'Elástico',
+  forroBollo:'Forro bolsillo', brochePant:'Broche pant.',
+  botonInt:'Botón int. pant.', cierre:'Cierre',
+  forroAbrigo:'Forro abrigo', entretela:'Entretela'
+};
+
+// Returns material detail string (tipo, color, tamaño) for display
+function matDetalle(it, campo) {
+  const d = it.d;
+  if (campo==='tela')        return it.tela || '—';
+  if (campo==='boton')       return (d[1]||'') + (it.color?' '+it.color:'');
+  if (campo==='elastico')    return d[3]||'—';
+  if (campo==='forroBollo')  return '—';
+  if (campo==='brochePant')  return '—';
+  if (campo==='botonInt')    return '—';
+  if (campo==='cierre')      return d[8]||'—';
+  if (campo==='forroAbrigo') return '—';
+  if (campo==='entretela')   return '—';
+  return '—';
+}
+
+// Returns calculated quantity for display
+function matCantidad(it, campo) {
+  const d = it.d; const cant = it.cantTotal;
+  if (campo==='tela')        return d[0]?r2(d[0]*cant)+'m':null;
+  if (campo==='boton')       return d[2]?r2(d[2]*cant)+' u.':null;
+  if (campo==='elastico')    return d[4]?r2(d[4]*cant/100)+'m':null;
+  if (campo==='forroBollo')  return d[5]?r2(d[5]*cant)+'m':null;
+  if (campo==='brochePant')  return d[6]?r2(d[6]*cant)+' u.':null;
+  if (campo==='botonInt')    return d[7]?r2(d[7]*cant)+' u.':null;
+  if (campo==='cierre')      return d[9]?r2(d[9]*cant)+' u.':null;
+  if (campo==='forroAbrigo') return d[10]?r2(d[10]*cant)+'m':null;
+  if (campo==='entretela')   return d[11]?r2(d[11]*cant)+'m':null;
+  return null;
+}
+
+function renderResumen() {
+  if (!items.length) { document.getElementById('rs-content').innerHTML='<div class="empty-res">Sin datos</div>'; return; }
+
+  // Build: for each material, group rows by (detalle) and sum quantities numerically
+  // pendientes and disponibles separately
+  function buildTable(estadoFiltro) {
+    // mat -> detalle -> { total_num, unit, prendas[] }
+    const matMap = {};
+    items.forEach(it => {
+      const s = state[it.idx];
+      Object.keys(MAT_LABELS).forEach(campo => {
+        if (s[campo] !== estadoFiltro) return;
+        const det = matDetalle(it, campo);
+        const cantStr = matCantidad(it, campo);
+        if (!cantStr) return;
+        // parse number and unit
+        const numMatch = cantStr.match(/^([\d.]+)\s*(.*)$/);
+        const num = numMatch ? parseFloat(numMatch[1]) : 0;
+        const unit = numMatch ? numMatch[2] : '';
+        const key = campo + '||' + det;
+        if (!matMap[key]) matMap[key] = {campo, det, total:0, unit, prendas:[]};
+        matMap[key].total = r2(matMap[key].total + num);
+        matMap[key].prendas.push(it.bsale||it.prenda);
+      });
+    });
+
+    // Group by campo (material type)
+    const byCampo = {};
+    Object.values(matMap).forEach(row => {
+      if (!byCampo[row.campo]) byCampo[row.campo] = [];
+      byCampo[row.campo].push(row);
+    });
+
+    if (!Object.keys(byCampo).length) return '<div class="empty-res">Sin items</div>';
+
+    let html = '<table style="width:100%;border-collapse:collapse">';
+    html += `<thead><tr>
+      <th style="padding:8px 12px;background:#f7f5f0;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);text-align:left">Material</th>
+      <th style="padding:8px 12px;background:#f7f5f0;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);text-align:left">Detalle</th>
+      <th style="padding:8px 12px;background:#f7f5f0;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);text-align:right">Total</th>
+      <th style="padding:8px 12px;background:#f7f5f0;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);text-align:left">Prendas</th>
+    </tr></thead><tbody>`;
+
+    Object.keys(MAT_LABELS).forEach(campo => {
+      if (!byCampo[campo]) return;
+      byCampo[campo].forEach((row, i) => {
+        html += `<tr style="border-bottom:1px solid #f0ede8">
+          <td style="padding:8px 12px;font-weight:600;font-size:12px;vertical-align:top">${i===0?MAT_LABELS[campo]:''}</td>
+          <td style="padding:8px 12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text)">${row.det}</td>
+          <td style="padding:8px 12px;font-size:13px;font-weight:600;text-align:right;white-space:nowrap;color:var(--accent)">${row.total} ${row.unit}</td>
+          <td style="padding:8px 12px;font-size:11px;color:var(--muted)">${row.prendas.join(', ')}</td>
+        </tr>`;
+      });
+      // Separator between material groups
+      html += `<tr><td colspan="4" style="height:4px;background:#f7f5f0"></td></tr>`;
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">';
+
+  html += `<div class="res-card">
+    <div class="res-card-head" style="background:var(--pend);color:white">Pendientes de compra</div>
+    <div>${buildTable('Pendiente')}</div>
+  </div>`;
+
+  html += `<div class="res-card">
+    <div class="res-card-head" style="background:var(--disp);color:white">Disponibles</div>
+    <div>${buildTable('Disponible')}</div>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('rs-content').innerHTML = html;
+}
+
+// ── MATERIALES TOTALES POR TALLER ─────────────────────────────
+function renderTotales() {
+  if (!items.length) { document.getElementById('tot-content').innerHTML='<div class="empty-res">Sin datos</div>'; return; }
+
+  const tallers = {};
+  items.forEach(it => {
+    if (!tallers[it.taller]) tallers[it.taller] = [];
+    tallers[it.taller].push(it);
+  });
+
+  let html = '';
+  for (const [taller, its] of Object.entries(tallers)) {
+    // Build mat rows: { label, detalle, total, unit }
+    const rows = [];
+    its.forEach(it => {
+      const d = it.d; const cant = it.cantTotal;
+      const add = (label, det, num, unit) => {
+        if (num==null||num===0) return;
+        const ex = rows.find(r=>r.label===label&&r.det===det);
+        if (ex) ex.total = r2(ex.total+num);
+        else rows.push({label, det, total:r2(num), unit});
+      };
+      if (d[0])  add('Tela',              it.tela||'—',        r2(d[0]*cant),      'm');
+      if (d[2])  add('Botón',             (d[1]||'')+(it.color?' '+it.color:''),   r2(d[2]*cant),  'u.');
+      if (d[4])  add('Elástico',          d[3]||'—',           r2(d[4]*cant/100),  'm');
+      if (d[5])  add('Forro bolsillo',    '—',                 r2(d[5]*cant),      'm');
+      if (d[6])  add('Broche pantalón',   '—',                 r2(d[6]*cant),      'u.');
+      if (d[7])  add('Botón int. pant.',  '—',                 r2(d[7]*cant),      'u.');
+      if (d[9])  add('Cierre',            d[8]||'—',           r2(d[9]*cant),      'u.');
+      if (d[10]) add('Forro abrigo',      '—',                 r2(d[10]*cant),     'm');
+      if (d[11]) add('Entretela',         '—',                 r2(d[11]*cant),     'm');
+    });
+
+    html += `<div class="taller-section">
+      <div class="taller-head">${taller}</div>
+      <table class="mat-total-table">
+        <thead><tr>
+          <th>Material</th>
+          <th>Detalle</th>
+          <th style="text-align:right">Total</th>
+        </tr></thead>
+        <tbody>`;
+    if (!rows.length) {
+      html += '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:12px">Sin materiales registrados</td></tr>';
+    } else {
+      rows.forEach(row => {
+        html += `<tr>
+          <td class="mat-name">${row.label}</td>
+          <td class="mat-detail">${row.det}</td>
+          <td style="text-align:right;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace">${row.total} ${row.unit}</td>
+        </tr>`;
+      });
+    }
+    html += `</tbody></table></div>`;
+  }
+  document.getElementById('tot-content').innerHTML = html;
+}
+
+// ── BASE DE DATOS EDITABLE ────────────────────────────────────
+function renderDB() {
+  let html = '';
+  const keys = Object.keys(DB).sort();
+  keys.forEach(key => {
+    const d = DB[key];
+    html += dbRow(key, d);
+  });
+  document.getElementById('db-body').innerHTML = html;
+}
+
+function dbRow(key, d) {
+  const esc = v => v!=null?v:'';
+  return `<tr id="dbr-${CSS.escape(key)}" style="border-bottom:1px solid #f0ede8">
+    <td class="left" style="min-width:240px;width:240px"><input style="width:100%;min-width:200px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px" value="${esc(key)}" onchange="updateDBKey('${key}',this)"></td>
+    <td><input type="number" step="0.01" style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[0])}" onchange="updateDB('${key}',0,this.value||null)"></td>
+    <td><input style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[1])}" onchange="updateDB('${key}',1,this.value||null)"></td>
+    <td><input type="number" step="1" style="width:55px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[2])}" onchange="updateDB('${key}',2,this.value?+this.value:null)"></td>
+    <td><input style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[3])}" onchange="updateDB('${key}',3,this.value||null)"></td>
+    <td><input type="number" step="0.01" style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[4])}" onchange="updateDB('${key}',4,this.value?+this.value:null)"></td>
+    <td><input type="number" step="0.01" style="width:55px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[5])}" onchange="updateDB('${key}',5,this.value?+this.value:null)"></td>
+    <td><input type="number" step="1" style="width:55px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[6])}" onchange="updateDB('${key}',6,this.value?+this.value:null)"></td>
+    <td><input type="number" step="1" style="width:55px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[7])}" onchange="updateDB('${key}',7,this.value?+this.value:null)"></td>
+    <td><input style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[8])}" onchange="updateDB('${key}',8,this.value||null)"></td>
+    <td><input type="number" step="1" style="width:55px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[9])}" onchange="updateDB('${key}',9,this.value?+this.value:null)"></td>
+    <td><input type="number" step="0.01" style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[10])}" onchange="updateDB('${key}',10,this.value?+this.value:null)"></td>
+    <td><input type="number" step="0.01" style="width:65px;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;text-align:center" value="${esc(d[11])}" onchange="updateDB('${key}',11,this.value?+this.value:null)"></td>
+    <td><button onclick="deleteDB('${key}')" style="padding:4px 10px;border:1px solid #e8b896;background:#fdf0e8;color:#7a3b1e;border-radius:4px;cursor:pointer;font-size:11px">Eliminar</button></td>
+  </tr>`;
+}
+
+function updateDB(key, idx, val) {
+  if (DB[key]) DB[key][idx] = val;
+  saveDBLocal();
+}
+
+function updateDBKey(oldKey, input) {
+  const newKey = input.value.trim().toUpperCase();
+  if (!newKey || newKey===oldKey) return;
+  DB[newKey] = DB[oldKey];
+  delete DB[oldKey];
+  saveDBLocal();
+  renderDB();
+}
+
+function deleteDB(key) {
+  if (!confirm('¿Eliminar ' + key + '?')) return;
+  delete DB[key];
+  saveDBLocal();
+  renderDB();
+}
+
+function addDbRow() {
+  const key = prompt('Nombre del modelo (ej: CAMISA XYZ):');
+  if (!key||!key.trim()) return;
+  const k = key.trim().toUpperCase();
+  DB[k] = [null,null,null,null,null,null,null,null,null,null,null,null];
+  saveDBLocal();
+  renderDB();
+}
+
+function saveDBLocal() {
+  try { localStorage.setItem('checklist_db', JSON.stringify(DB)); } catch(e){}
+}
+
+function loadDBLocal() {
+  try {
+    const saved = localStorage.getItem('checklist_db');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(DB, parsed);
+    }
+  } catch(e){}
+}
+
+// Load saved DB on startup
+loadDBLocal();
+
+function tab(t) {
+  ['pedido','checklist','resumen','totales','db'].forEach(id => {
+    document.getElementById('p-'+id).classList.toggle('on', id===t);
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('on', ['pedido','checklist','resumen','totales','db'][i]===t);
+  });
+  if (t==='resumen') renderResumen();
+  if (t==='totales') renderTotales();
+  if (t==='db') renderDB();
+}
+</script>
+</body>
+</html>
