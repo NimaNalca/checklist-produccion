@@ -694,13 +694,31 @@ function exportTotales(){
   if(!items.length){alert('Genera el checklist primero.');return;}
   var tallers=[];
   items.forEach(function(it){if(tallers.indexOf(it.taller)===-1)tallers.push(it.taller);});
-  var todas=[];
+  var wb = XLSX.utils.book_new();
   tallers.forEach(function(t){
-    todas.push([t.toUpperCase()]);
-    buildTallerRows(t).forEach(function(r){todas.push(r);});
-    todas.push([]);
+    var rows = buildTallerRows(t);
+    if(rows.length<=1) return;
+    // Add empty separator row and taller header
+    var sheetRows = [['TALLER: '+t,'',''],['','','']].concat(rows);
+    var ws = XLSX.utils.aoa_to_sheet(sheetRows);
+    ws['!cols'] = [{wch:20},{wch:25},{wch:10}];
+    // Merge taller header across columns
+    ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:2}}];
+    var safeName = t.slice(0,31).replace(/[\/\\\?\*\[\]]/g,'');
+    XLSX.utils.book_append_sheet(wb, ws, safeName);
   });
-  showModal('Materiales por Taller',todas);
+  // Also add a summary sheet with ALL tallers
+  var allRows = [['Taller','Material','Detalle','Total']];
+  tallers.forEach(function(t){
+    var rows = buildTallerRows(t);
+    for(var i=1;i<rows.length;i++){
+      allRows.push([t].concat(rows[i]));
+    }
+  });
+  var wsSummary = XLSX.utils.aoa_to_sheet(allRows);
+  wsSummary['!cols'] = [{wch:12},{wch:18},{wch:25},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'RESUMEN GENERAL');
+  XLSX.writeFile(wb, 'Materiales_Por_Taller.xlsx');
 }
 
 function exportTodo(){
