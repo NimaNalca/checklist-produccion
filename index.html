@@ -538,6 +538,12 @@ select.st.pend { background: var(--pend-bg); color: var(--pend); border-color: v
 </div>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  document.body.insertAdjacentHTML('afterbegin', 
+    '<div style="background:red;color:white;padding:10px;font-size:13px;position:fixed;top:0;left:0;right:0;z-index:99999">ERROR JS: ' + msg + ' (línea ' + line + ')</div>'
+  );
+  return false;
+};
 // ── BASE DE DATOS DE MODELOS ─────────────────────────────────
 // Columnas: [metrosTela, tipBoton, cantBoton, tipoElastico, metroElastico, forroBollo, brochePant, botonIntPant, tipCierre, cantCierre, forroAbrigo, entretela]
 const DB = {
