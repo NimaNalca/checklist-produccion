@@ -110,7 +110,7 @@ select.st.pend{background:var(--pend-bg);color:var(--pend);border-color:var(--pe
   <div class="tab on" onclick="goTab('pedido')">Pedido</div>
   <div class="tab" onclick="goTab('checklist')">Checklist</div>
   <div class="tab" onclick="goTab('resumen')">Resumen compra</div>
-  <div class="tab" onclick="goTab('totales')">Materiales por taller</div>
+  <div class="tab" onclick="goTab('totales')">Preparación Pedido</div>
   <div class="tab" onclick="goTab('db')">Base de datos</div>
 </div>
 
@@ -189,7 +189,7 @@ select.st.pend{background:var(--pend-bg);color:var(--pend);border-color:var(--pe
 <!-- MATERIALES POR TALLER -->
 <div id="p-totales" class="panel">
   <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-    <button class="btn-sm" onclick="exportTotales()">⬇ Descargar materiales</button>
+    <button class="btn-sm" onclick="exportTotales()">⬇ Descargar Preparación Pedido</button>
   </div>
   <div id="tot-content"><div class="empty">Sin datos aún</div></div>
 </div>
@@ -445,7 +445,14 @@ function cargar(){
     var color = bsaleWords[bsaleWords.length-1]||'';
     var d = lookupDB(bsale)||lookupDB(prenda)||[null,null,null,null,null,null,null,null,null,null,null,null];
     var idx = items.length;
-    items.push({idx,taller,tn,prenda,tela,bsale:bsale||prenda,cantTotal,color,d});
+    // Parse talla quantities from cols 6-16
+    var TALLA_NAMES=['S','M','L','36','38','40','42','44','12T','2','TU'];
+    var tallas=[], qtys=[];
+    for(var ti=0;ti<TALLA_NAMES.length;ti++){
+      var q=parseFloat(cols[6+ti])||0;
+      if(q>0){tallas.push(TALLA_NAMES[ti]);qtys.push(q);}
+    }
+    items.push({idx,taller,tn,prenda,tela,bsale:bsale||prenda,cantTotal,color,d,tallas,qtys});
     state[idx]={
       tela:       d[0]?'Pendiente':'No aplica',
       boton:      d[2]?'Pendiente':'No aplica',
@@ -582,6 +589,22 @@ function buildTallerRows(tallerName){
     if(!acc[key]) acc[key]={label:label,det:det,total:0,unit:unit};
     acc[key].total=r2(acc[key].total+num);
   }
+
+  // Etiqueta NIMA: 1 por prenda
+  var totalPrendas = its.reduce(function(s,it){return s+it.cantTotal;},0);
+
+  // Etiquetas tallas: 1 por prenda por talla
+  var tallasAcc = {};
+  its.forEach(function(it){
+    if(!it.tallas||!it.qtys) return;
+    it.tallas.forEach(function(t,i){
+      var q = it.qtys[i]||0;
+      if(!q) return;
+      if(!tallasAcc[t]) tallasAcc[t]=0;
+      tallasAcc[t]+=q;
+    });
+  });
+
   its.forEach(function(it){
     var d=it.d,c=it.cantTotal;
     if(d[0])  add('Tela',it.tela||'',r2(d[0]*c),'m');
@@ -594,7 +617,21 @@ function buildTallerRows(tallerName){
     if(d[10]) add('Forro abrigo','',r2(d[10]*c),'m');
     if(d[11]) add('Entretela','',r2(d[11]*c),'m');
   });
+
   var rows=[['Material','Detalle','Total']];
+
+  // Materiales de base
+  rows.push(['— ETIQUETAS —','','']);
+  rows.push(['Etiqueta NIMA','1 por prenda',totalPrendas+' u.']);
+  Object.keys(tallasAcc).sort().forEach(function(t){
+    rows.push(['Etiqueta talla '+t,'1 por prenda talla '+t,tallasAcc[t]+' u.']);
+  });
+  rows.push(['Etiqueta cuidados','1 por prenda',totalPrendas+' u.']);
+  rows.push(['— OTROS —','','']);
+  rows.push(['Ganchos plásticos','Según necesidad','—']);
+  rows.push(['Hilo','Según necesidad','—']);
+  rows.push(['— MATERIALES —','','']);
+
   Object.values(acc).forEach(function(r){rows.push([r.label,r.det,r.total+' '+r.unit]);});
   return rows;
 }
