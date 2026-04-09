@@ -235,14 +235,16 @@ function exportTodo() {
 
 
 
+
 function saveHTML() {
   saveDBLocal();
   var msg = document.createElement('div');
   msg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2D4A3E;color:white;padding:14px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
-  msg.textContent = '✅ Base de datos guardada en este navegador';
+  msg.textContent = 'Base de datos guardada en este navegador';
   document.body.appendChild(msg);
   setTimeout(function(){ msg.remove(); }, 3000);
 }
+
 </script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1149,6 +1151,16 @@ function tab(t) {
   if (t==='totales') renderTotales();
   if (t==='db') renderDB();
 }
+
+function saveHTML() {
+  saveDBLocal();
+  var msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;top:20px;right:20px;background:#2D4A3E;color:white;padding:14px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
+  msg.textContent = 'Base de datos guardada en este navegador';
+  document.body.appendChild(msg);
+  setTimeout(function(){ msg.remove(); }, 3000);
+}
+
 </script>
 </body>
 </html>
