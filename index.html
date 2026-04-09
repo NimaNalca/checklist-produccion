@@ -589,22 +589,17 @@ function buildTallerRows(tallerName){
     if(!acc[key]) acc[key]={label:label,det:det,total:0,unit:unit};
     acc[key].total=r2(acc[key].total+num);
   }
-
-  // Etiqueta NIMA: 1 por prenda
-  var totalPrendas = its.reduce(function(s,it){return s+it.cantTotal;},0);
-
-  // Etiquetas tallas: 1 por prenda por talla
-  var tallasAcc = {};
+  var totalPrendas=its.reduce(function(s,it){return s+it.cantTotal;},0);
+  var tallasAcc={};
   its.forEach(function(it){
     if(!it.tallas||!it.qtys) return;
     it.tallas.forEach(function(t,i){
-      var q = it.qtys[i]||0;
+      var q=it.qtys[i]||0;
       if(!q) return;
       if(!tallasAcc[t]) tallasAcc[t]=0;
       tallasAcc[t]+=q;
     });
   });
-
   its.forEach(function(it){
     var d=it.d,c=it.cantTotal;
     if(d[0])  add('Tela',it.tela||'',r2(d[0]*c),'m');
@@ -617,26 +612,18 @@ function buildTallerRows(tallerName){
     if(d[10]) add('Forro abrigo','',r2(d[10]*c),'m');
     if(d[11]) add('Entretela','',r2(d[11]*c),'m');
   });
-
   var rows=[['Material','Detalle','Total']];
-
-  // MATERIALES
   rows.push(['— MATERIALES —','','']);
   Object.values(acc).forEach(function(r){rows.push([r.label,r.det,r.total+' '+r.unit]);});
-
-  // ETIQUETAS
   rows.push(['— ETIQUETAS —','','']);
   rows.push(['Etiqueta NIMA','',totalPrendas+' u.']);
   Object.keys(tallasAcc).sort().forEach(function(t){
     rows.push(['Etiqueta talla '+t,'',tallasAcc[t]+' u.']);
   });
   rows.push(['Etiqueta cuidados','',totalPrendas+' u.']);
-
-  // OTROS
   rows.push(['— OTROS —','','']);
   rows.push(['Ganchos plásticos','','—']);
   rows.push(['Hilo','','—']);
-
   return rows;
 }
 
