@@ -444,7 +444,7 @@ function cargar(){
     var bsaleWords = (bsale||prenda).trim().split(/\s+/);
     var color = bsaleWords[bsaleWords.length-1]||'';
     var d = lookupDB(bsale)||lookupDB(prenda)||[null,null,null,null,null,null,null,null,null,null,null,null];
-    var idx = items.length;
+    var itemIdx = items.length;
     // Parse talla quantities from cols 6-16
     var TALLA_NAMES=['S','M','L','36','38','40','42','44','12T','2','TU'];
     var tallas=[], qtys=[];
@@ -452,8 +452,9 @@ function cargar(){
       var q=parseFloat(cols[6+ti])||0;
       if(q>0){tallas.push(TALLA_NAMES[ti]);qtys.push(q);}
     }
-    items.push({idx,taller,tn,prenda,tela,bsale:bsale||prenda,cantTotal,color,d,tallas,qtys});
-    state[idx]={
+    items.push({idx:itemIdx,taller,tn,prenda,tela,bsale:bsale||prenda,cantTotal,color,d,tallas,qtys});
+    state[itemIdx]={
+
       tela:       d[0]?'Pendiente':'No aplica',
       boton:      d[2]?'Pendiente':'No aplica',
       elastico:   (d[3]||d[4])?'Pendiente':'No aplica',
