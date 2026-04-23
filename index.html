@@ -81,14 +81,16 @@ select.st.pend{background:var(--pend-bg);color:var(--pend);border-color:var(--pe
   <button class="hdr-btn" onclick="exportTodo()">⬇ Descargar todo</button>
 </div>
 <div class="tabs">
-  <div class="tab on" onclick="goTab('pedido')">Pedido</div>
+  <div class="tab on" onclick="goTab('db')">1. Base de datos</div>
+  <div class="tab" onclick="goTab('pedido')">2. Pedido</div>
   <div class="tab" onclick="goTab('checklist')">Checklist</div>
   <div class="tab" onclick="goTab('resumen')">Resumen compra</div>
   <div class="tab" onclick="goTab('totales')">Preparación Pedido</div>
-  <div class="tab" onclick="goTab('db')">Base de datos</div>
+</div>
+</div>
 </div>
 
-<div id="p-pedido" class="panel on">
+<div id="p-pedido" class="panel">
   <div style="max-width:800px">
     <div class="info-box">Copia las filas de datos de tu planilla Excel (sin encabezados) y pégalas aquí.</div>
     <textarea id="tin" placeholder="Pega aquí el contenido copiado desde tu planilla Excel..."></textarea>
@@ -158,16 +160,25 @@ select.st.pend{background:var(--pend-bg);color:var(--pend);border-color:var(--pe
   <div id="tot-content"><div class="empty">Sin datos aún</div></div>
 </div>
 
-<div id="p-db" class="panel">
+<div id="p-db" class="panel on">
+  <div id="db-upload-area" style="border:2px dashed #B8D4C4;border-radius:12px;padding:40px;text-align:center;background:var(--accent-light);margin-bottom:20px;cursor:pointer;transition:all .2s" ondragover="event.preventDefault();this.style.borderColor='#2D4A3E'" ondragleave="this.style.borderColor='#B8D4C4'" ondrop="dropXLSX(event)">
+    <div style="font-size:32px;margin-bottom:12px">📂</div>
+    <div style="font-size:15px;font-weight:600;color:var(--accent);margin-bottom:6px">Arrastra aquí el Excel de base de datos</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">o haz clic para seleccionar el archivo</div>
+    <button class="btn" onclick="document.getElementById('db-xlsx').click()" style="margin-top:0">Seleccionar archivo Excel</button>
+    <input type="file" id="db-xlsx" accept=".xlsx,.xls" style="display:none" onchange="loadXLSX(this)">
+    <div id="db-upload-msg" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+  </div>
+  <div id="db-table-area" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
     <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Base de datos de modelos</div>
     <div style="display:flex;gap:8px">
-      <button class="btn-sm btn-outline" onclick="document.getElementById('db-file').click()">⬆ Importar JSON</button>
+      <button class="btn-sm btn-outline" onclick="document.getElementById('db-xlsx2').click()">↺ Recargar Excel</button>
+      <input type="file" id="db-xlsx2" accept=".xlsx,.xls" style="display:none" onchange="loadXLSX(this)">
       <button class="btn-sm" onclick="addRow()">+ Agregar modelo</button>
     </div>
   </div>
-  <input type="file" id="db-file" accept=".json" style="display:none" onchange="importDB(this)">
-  <div class="tbl-outer" style="max-height:70vh;overflow-y:auto">
+  <div class="tbl-outer" style="max-height:60vh;overflow-y:auto">
     <table class="db-tbl">
       <thead>
         <tr>
@@ -696,12 +707,74 @@ function importDB(inp){
 }
 function toast(msg){var t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},3000);}
 
+function dropXLSX(e){
+  e.preventDefault();
+  document.getElementById("db-upload-area").style.borderColor="#B8D4C4";
+  var f=e.dataTransfer.files[0];
+  if(!f){return;}
+  readXLSXFile(f);
+}
+
+function loadXLSX(inp){
+  var f=inp.files[0];
+  if(!f) return;
+  readXLSXFile(f);
+  inp.value="";
+}
+
+function readXLSXFile(f){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      // Parse: skip first 2 header rows, data from row 3
+      // Cols: 0=prenda,1=metrosTela,2=tipBoton,3=cantBoton,4=tipoElastico,5=metroElastico,6=forroBollo,7=brochePant,8=botonInt,9=tipCierre,10=cantCierre,11=forroAbrigo,12=entretela
+      var newDB={};
+      for(var i=2;i<rows.length;i++){
+        var r=rows[i];
+        if(!r||!r[0]) continue;
+        var prenda=String(r[0]).trim().toUpperCase();
+        if(!prenda) continue;
+        newDB[prenda]=[
+          r[1]||null,   // metros tela
+          r[2]||null,   // tipo boton
+          r[3]||null,   // cant boton
+          r[4]||null,   // tipo elastico
+          r[5]||null,   // metro elastico
+          r[6]||null,   // forro bolsillo
+          r[7]||null,   // broche pant
+          r[8]||null,   // boton int
+          r[9]||null,   // tipo cierre
+          r[10]||null,  // cant cierre
+          r[11]||null,  // forro abrigo
+          r[12]||null   // entretela
+        ];
+      }
+      var count=Object.keys(newDB).length;
+      if(count===0){alert("No se encontraron modelos en el archivo.");return;}
+      // Replace DB
+      Object.keys(DB).forEach(function(k){delete DB[k];});
+      Object.assign(DB,newDB);
+      document.getElementById("db-upload-msg").textContent="✅ "+count+" modelos cargados";
+      document.getElementById("db-upload-area").style.display="none";
+      document.getElementById("db-table-area").style.display="block";
+      renderDB();
+      toast("Base de datos cargada: "+count+" modelos");
+    }catch(err){
+      alert("Error al leer el archivo: "+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(f);
+}
+
 function goTab(t){
-  ["pedido","checklist","resumen","totales","db"].forEach(function(id){
+  ["db","pedido","checklist","resumen","totales"].forEach(function(id){
     document.getElementById("p-"+id).classList.toggle("on",id===t);
   });
   document.querySelectorAll(".tab").forEach(function(el,i){
-    el.classList.toggle("on",["pedido","checklist","resumen","totales","db"][i]===t);
+    el.classList.toggle("on",["db","pedido","checklist","resumen","totales"][i]===t);
   });
   if(t==="resumen") renderResumen();
   if(t==="totales") renderTotales();
