@@ -622,7 +622,38 @@ function renderTotales(){
 function xlsxDown(fname, sheets){
   var wb=XLSX.utils.book_new();
   sheets.forEach(function(s){
-    var ws=XLSX.utils.aoa_to_sheet(s.rows);
+    // Build HTML table for styled export
+    var html="<table border='1' style='border-collapse:collapse;font-family:Arial;font-size:11px'>";
+    s.rows.forEach(function(row,ri){
+      if(!row||row.length===0) return;
+      // Section label row (single cell)
+      if(row.length===1){
+        html+="<tr><td colspan='30' style='background:#2D4A3E;color:white;font-weight:bold;padding:6px 10px;font-size:11px'>"+row[0]+"</td></tr>";
+        return;
+      }
+      // Header row (first row or after section label)
+      if(ri===0){
+        html+="<tr>";
+        row.forEach(function(c){
+          html+="<td style='background:#2D4A3E;color:white;font-weight:bold;padding:6px 10px;text-align:center;border:1px solid #1a3a2e'>"+( c!=null?c:"")+"</td>";
+        });
+        html+="</tr>";
+        return;
+      }
+      // Data rows with alternating colors
+      var bg=ri%2===0?"#F5F3EE":"#FFFFFF";
+      html+="<tr>";
+      row.forEach(function(c,ci){
+        var align=ci>=2?"right":"left";
+        var fw=ci===0?"font-weight:bold;":"";
+        html+="<td style='background:"+bg+";padding:5px 10px;border:1px solid #DDD9D0;text-align:"+align+";"+fw+"'>"+(c!=null?c:"")+"</td>";
+      });
+      html+="</tr>";
+    });
+    html+="</table>";
+    var ws=XLSX.utils.table_to_sheet(
+      (function(){var d=document.createElement("div");d.innerHTML=html;return d.firstChild;})()
+    );
     ws["!cols"]=s.cols||[];
     XLSX.utils.book_append_sheet(wb,ws,s.name.slice(0,31));
   });
