@@ -415,7 +415,8 @@ function cargar(){
     var cantTotal=parseFloat(cols[cols.length-1])||0;
     if(!cantTotal) continue;
     var bwords=(bsale||prenda).trim().split(/\s+/);
-    var color=bwords[bwords.length-1]||"";
+    var telaWords=tela.trim().split(/\s+/);
+    var color=telaWords[telaWords.length-1]||"";
     var d=findDB(bsale)||findDB(prenda)||[null,null,null,null,null,null,null,null,null,null,null,null];
     var tallas=[],qtys=[];
     for(var ti=0;ti<TALLAS.length;ti++){
