@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Producción</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#F5F3EE;--surface:#FFFFFF;--border:#DDD9D0;--text:#1A1814;--muted:#7A7670;--accent:#2D4A3E;--accent-light:#E8F0EC;--pend:#7A3B1E;--pend-bg:#FDF0E8;--pend-border:#E8B896;--disp:#1A4A2E;--disp-bg:#E8F5ED;--disp-border:#96D4A8;--na:#7A7670;--na-bg:#F0EDE8;--na-border:#C8C4BC}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+.hdr{background:var(--accent);color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-title{font-family:"DM Mono",monospace;font-size:15px;font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+.hdr-sub{font-size:11px;opacity:.6;margin-top:2px}
+.hdr-btn{padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:white;font-size:12px;font-weight:600;cursor:pointer}
+.tabs{display:flex;border-bottom:1.5px solid var(--border);background:var(--surface);padding:0 24px}
+.tab{padding:12px 18px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none;padding:20px 24px}.panel.on{display:block}
+textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;font-family:"DM Mono",monospace;background:var(--surface);color:var(--text);resize:vertical}
+textarea:focus{outline:none;border-color:#888}
+.btn{padding:9px 20px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-transform:uppercase;margin-top:10px}
+.btn:hover{opacity:.85}
+.btn-sm{padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+#msg{font-size:12px;color:var(--muted);margin-top:8px}
+.info-box{background:var(--accent-light);border:1px solid #B8D4C4;border-radius:8px;padding:12px 16px;font-size:12px;color:var(--accent);margin-bottom:16px;line-height:1.6}
+.tbl-outer{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;font-size:12px;table-layout:fixed}
+.thg{background:var(--accent);color:white;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-align:center;padding:6px 8px;border-right:1px solid rgba(255,255,255,.15);white-space:nowrap}
+.ths{background:#F0EDE8;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-bottom:1.5px solid var(--border);border-right:1px solid var(--border);text-align:center;white-space:nowrap}
+.ths.left{text-align:left}
+tbody td{padding:6px 8px;border-bottom:1px solid #EDE9E2;border-right:1px solid #EDE9E2;vertical-align:middle;font-size:12px}
+tbody td.left{text-align:left}
+tbody td.num{text-align:center;font-family:"DM Mono",monospace;font-size:11px;white-space:nowrap}
+tbody td.gs{border-left:2.5px solid var(--accent)!important}
+thead th.gs{border-left:2.5px solid rgba(255,255,255,.4)!important}
+tr.ta td{background:#FFF}
+tr.tb td{background:#F7F5F0}
+tr.ta:hover td,tr.tb:hover td{background:#EAF0EC}
+tr.ta td.gs,tr.tb td.gs{border-left:2.5px solid var(--accent)!important}
+tr.sec-row td{background:var(--accent)!important;color:white;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px}
+col.c1{width:70px}col.c2{width:52px}col.c3{width:175px}col.c4{width:42px}col.c5{width:100px}
+col.c6{width:52px}col.c7{width:100px}col.c8{width:52px}col.c9{width:65px}col.c10{width:42px}
+col.c11{width:100px}col.c12{width:52px}col.c13{width:52px}col.c14{width:100px}
+col.c15{width:52px}col.c16{width:100px}col.c17{width:42px}col.c18{width:100px}
+col.c19{width:42px}col.c20{width:100px}col.c21{width:52px}col.c22{width:42px}
+col.c23{width:100px}col.c24{width:52px}col.c25{width:100px}col.c26{width:52px}col.c27{width:100px}
+select.st{font-size:11px;border-radius:5px;padding:4px;cursor:pointer;width:90px;border:1px solid;appearance:none;text-align:center}
+select.st.na{background:var(--na-bg);color:var(--na);border-color:var(--na-border)}
+select.st.disp{background:var(--disp-bg);color:var(--disp);border-color:var(--disp-border)}
+select.st.pend{background:var(--pend-bg);color:var(--pend);border-color:var(--pend-border)}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.res-head{padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:white}
+.tsec{margin-bottom:20px}
+.thead{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:8px 16px;background:var(--accent-light);border-radius:6px;margin-bottom:8px;border:1px solid #B8D4C4}
+.ttbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.ttbl th{background:#F7F5F0;padding:8px 14px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)}
+.ttbl td{padding:8px 14px;border-bottom:1px solid #F0EDE8;font-size:12px}
+.ttbl tr:last-child td{border-bottom:none}
+.ttbl .sec-lbl td{background:var(--accent);color:white;font-size:10px;font-weight:700;letter-spacing:.1em;padding:5px 14px}
+.db-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.db-tbl th{background:#F0EDE8;padding:7px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1.5px solid var(--border);white-space:nowrap;text-align:center}
+.db-tbl th:first-child{text-align:left;min-width:240px;width:240px}
+.db-tbl td{padding:5px 6px;border-bottom:1px solid #F0EDE8;vertical-align:middle}
+.dbi{border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px;background:var(--surface);color:var(--text);width:100%}
+.dbi-n{width:240px}.dbi-num{width:60px;text-align:center}.dbi-txt{width:65px;text-align:center}
+.btn-del{padding:3px 10px;border:1px solid #e8b896;background:#fdf0e8;color:#7a3b1e;border-radius:4px;cursor:pointer;font-size:11px}
+.empty{padding:2rem;text-align:center;color:var(--muted);font-size:13px}
+.toast{position:fixed;top:20px;right:20px;background:var(--accent);color:white;padding:14px 20px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="hdr-title">Checklist Producción</div>
+    <div class="hdr-sub">Sistema de control de materiales por pedido</div>
+  </div>
+  <button class="hdr-btn" onclick="exportTodo()">⬇ Descargar todo</button>
+</div>
+<div class="tabs">
+  <div class="tab on" onclick="goTab('db')">1. Base de datos</div>
+  <div class="tab" onclick="goTab('pedido')">2. Pedido</div>
+  <div class="tab" onclick="goTab('checklist')">Checklist</div>
+  <div class="tab" onclick="goTab('resumen')">Resumen compra</div>
+  <div class="tab" onclick="goTab('totales')">Preparación Pedido</div>
+</div>
+</div>
+</div>
+
+<div id="p-pedido" class="panel">
+  <div style="max-width:800px">
+    <div class="info-box">Copia las filas de datos de tu planilla Excel (sin encabezados) y pégalas aquí.</div>
+    <textarea id="tin" placeholder="Pega aquí el contenido copiado desde tu planilla Excel..."></textarea>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn" onclick="cargar()">Generar checklist</button>
+      <span id="msg"></span>
+    </div>
+  </div>
+</div>
+
+<div id="p-checklist" class="panel">
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn-sm" onclick="exportTodo()">⬇ Descargar Excel</button>
+  </div>
+  <div class="tbl-outer">
+    <table id="ck-table">
+      <colgroup>
+        <col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5">
+        <col class="c6"><col class="c7"><col class="c8"><col class="c9"><col class="c10"><col class="c11">
+        <col class="c12"><col class="c13"><col class="c14"><col class="c15"><col class="c16">
+        <col class="c17"><col class="c18"><col class="c19"><col class="c20">
+        <col class="c21"><col class="c22"><col class="c23"><col class="c24"><col class="c25">
+        <col class="c26"><col class="c27">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="thg" colspan="5" style="text-align:left">Info prenda</th>
+          <th class="thg gs" colspan="2">Tela</th>
+          <th class="thg gs" colspan="4">Botón</th>
+          <th class="thg gs" colspan="3">Elástico</th>
+          <th class="thg gs" colspan="2">Forro bolsillo</th>
+          <th class="thg gs" colspan="2">Broche pant.</th>
+          <th class="thg gs" colspan="2">Botón int.</th>
+          <th class="thg gs" colspan="3">Cierre</th>
+          <th class="thg gs" colspan="2">Forro abrigo</th>
+          <th class="thg gs" colspan="2">Entretela</th>
+        </tr>
+        <tr>
+          <th class="ths left">Taller</th><th class="ths left">T.N</th><th class="ths left">Prenda</th><th class="ths">Cant.</th>
+          <th class="ths left gs">Tipo tela</th><th class="ths">Metros</th><th class="ths">Estado</th>
+          <th class="ths gs">Tipo</th><th class="ths">Color</th><th class="ths">Cant.</th><th class="ths">Estado</th>
+          <th class="ths gs">Tipo</th><th class="ths">Metros</th><th class="ths">Estado</th>
+          <th class="ths gs">Metros</th><th class="ths">Estado</th>
+          <th class="ths gs">Cant.</th><th class="ths">Estado</th>
+          <th class="ths gs">Cant.</th><th class="ths">Estado</th>
+          <th class="ths gs">Tipo</th><th class="ths">Cant.</th><th class="ths">Estado</th>
+          <th class="ths gs">Metros</th><th class="ths">Estado</th>
+          <th class="ths gs">Metros</th><th class="ths">Estado</th>
+        </tr>
+      </thead>
+      <tbody id="ck-body"><tr><td colspan="27" class="empty">Carga un pedido primero</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="p-resumen" class="panel">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn-sm" onclick="exportResumen()">⬇ Descargar resumen</button>
+  </div>
+  <div id="rs-content"><div class="empty">Sin datos aún</div></div>
+</div>
+
+<div id="p-totales" class="panel">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn-sm" onclick="exportTotales()">⬇ Descargar Preparación Pedido</button>
+  </div>
+  <div id="tot-content"><div class="empty">Sin datos aún</div></div>
+</div>
+
+<div id="p-db" class="panel on">
+  <div id="db-upload-area" style="border:2px dashed #B8D4C4;border-radius:12px;padding:40px;text-align:center;background:var(--accent-light);margin-bottom:20px;cursor:pointer;transition:all .2s" ondragover="event.preventDefault();this.style.borderColor='#2D4A3E'" ondragleave="this.style.borderColor='#B8D4C4'" ondrop="dropXLSX(event)">
+    <div style="font-size:32px;margin-bottom:12px">📂</div>
+    <div style="font-size:15px;font-weight:600;color:var(--accent);margin-bottom:6px">Arrastra aquí el Excel de base de datos</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">o haz clic para seleccionar el archivo</div>
+    <button class="btn" onclick="document.getElementById('db-xlsx').click()" style="margin-top:0">Seleccionar archivo Excel</button>
+    <input type="file" id="db-xlsx" accept=".xlsx,.xls" style="display:none" onchange="loadXLSX(this)">
+    <div id="db-upload-msg" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+  </div>
+  <div id="db-table-area" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Base de datos de modelos</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-outline" onclick="document.getElementById('db-xlsx2').click()">↺ Recargar Excel</button>
+      <input type="file" id="db-xlsx2" accept=".xlsx,.xls" style="display:none" onchange="loadXLSX(this)">
+      <button class="btn-sm" onclick="addRow()">+ Agregar modelo</button>
+    </div>
+  </div>
+  <div class="tbl-outer" style="max-height:60vh;overflow-y:auto">
+    <table class="db-tbl">
+      <thead>
+        <tr>
+          <th>Modelo</th><th>Tela(m)</th><th>Tipo botón</th><th>Cant.botón</th>
+          <th>Tipo elást.</th><th>Metro elást.</th><th>Forro bols.</th>
+          <th>Broche</th><th>Botón int.</th><th>Tipo cierre</th>
+          <th>Cant.cierre</th><th>Forro abr.</th><th>Entretela</th><th>—</th>
+        </tr>
+      </thead>
+      <tbody id="db-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const DB = {
+"ABRIGO AIA":[2.2,'36"',2,null,null,null,null,null,null,null,2,1],
+"ABRIGO FEI":[2,'BROCHE',2,null,null,null,null,null,null,null,1.7,1.3],
+"ABRIGO GAN":[2.2,'36"',3,null,null,null,null,null,null,null,2,1],
+"ABRIGO INA":[2.2,'BROCHE',2,null,null,null,null,null,null,null,1.9,1.8],
+"ABRIGO NEU":[2.5,'40"',4,null,null,null,null,null,null,null,2.3,null],
+"ABRIGO NIO":[2.6,'32"',7,null,null,null,null,null,null,null,2.3,0.8],
+"ABRIGO TAE":[2.4,'40"',4,null,null,null,null,null,null,null,2,1],
+"ABRIGO TAE CUADROS":[2.4,'40"',4,null,null,null,null,null,null,null,2,2],
+"BERMUDA RAM":[1.2,null,null,null,null,null,1,1,null,1,null,null],
+"BLAZER FEI":[1.7,'BROCHE',2,null,null,null,null,null,null,null,1.4,1.1],
+"BLAZER NIL":[1.75,'32"',3,null,null,null,null,null,null,null,1.4,1.4],
+"BLAZER RAM":[1.25,'32"',2,null,null,null,null,null,null,null,1.1,null],
+"BLUSA BEA":[1,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA BEL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"BLUSA ELA":[1,null,null,2,0.5,null,null,null,null,null,null,null],
+"BLUSA LEAN":[1,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA MON":[1.3,null,null,null,null,null,null,null,null,null,null,null],
+"BLUSA NEL":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA OBA":[1,'18"',2,null,null,null,null,null,null,null,null,null],
+"BLUSA RAN":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BLUSA SIM":[1.2,'18"',1,null,null,null,null,null,null,null,null,null],
+"BUFANDA VARA BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISA ABI":[1.2,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA ACI":[1.7,'18"',13,null,null,null,null,null,null,null,null,null],
+"CAMISA BIA":[1.4,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA BIB":[1.2,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA CAO":[1.4,'18"',10,null,null,null,null,null,null,null,null,null],
+"CAMISA COE":[1.6,'18"',12,null,null,null,null,null,null,null,null,null],
+"CAMISA DIS":[1.7,'18"',9,null,null,null,null,null,null,null,null,null],
+"CAMISA EFC":[1.8,'18"',10,null,null,null,null,null,null,null,null,null],
+"CAMISA GEA":[1.5,'18"',7,null,null,null,null,null,null,null,null,null],
+"CAMISA GLO":[1.3,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA IFA":[1.35,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAM":[1.4,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAU":[1.6,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA LAY":[1.6,'18"',12,null,null,null,null,null,null,null,null,null],
+"CAMISA MUN":[1.5,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA MUO":[1.5,'18"',6,null,null,null,null,null,null,null,null,null],
+"CAMISA NAR":[1.5,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAMISA NEC":[1.4,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA RAM":[1.5,'16"',8,null,null,null,null,null,null,null,null,null],
+"CAMISA RAT":[1.5,'16"',11,null,null,null,null,null,null,null,null,null],
+"CAMISA SAI":[1.5,'18"',5,null,null,null,null,null,null,null,null,null],
+"CAMISA TUC":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA ADE":[1.1,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA BEATLE LIU":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISETA MIL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"CAMISÓN ALI":[1.8,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAMISÓN CAI":[1.8,'18"',14,null,null,null,null,null,null,null,null,null],
+"CAMISÓN EFE":[2,'18"',11,null,null,null,null,null,null,null,null,null],
+"CAMISÓN MUO":[2,'18"',9,null,null,null,null,null,null,null,null,null],
+"CAMISÓN NEC":[2,'18"',8,null,null,null,null,null,null,null,null,null],
+"CAPA BEB":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"CAPA BEB M/LARGA":[1.3,null,null,null,null,null,null,null,null,null,null,null],
+"CAPA LIN":[2.8,null,null,null,null,null,null,null,null,null,1,null],
+"CARDIGAN DAN BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN DAN GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN MEL BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN MEL GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN NUR BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"CARDIGAN NUR GLORIA":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO CAS BORIS":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO CAS GLORIA":[null,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO DAE":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"CHALECO NES GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"CHAQUETA AIA":[1.75,'36"',2,null,1,null,null,null,null,null,1.5,null],
+"CHAQUETA CEU":[1.5,'28"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETA CIT":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+"CHAQUETA COE":[1.8,'32"',9,null,null,null,null,null,null,null,null,null],
+"CHAQUETA GAN":[1.7,'36"',3,null,1,null,null,null,null,null,1.5,null],
+"CHAQUETA GOA":[1.4,'24"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETA NIO":[2.2,'BROCHE',9,null,1,null,null,null,null,null,null,null],
+"CHAQUETA NOG":[1.5,'28"',6,null,null,null,null,null,null,null,null,null],
+"CHAQUETÓN FEI":[2,'BROCHE',2,null,null,null,null,null,null,null,1.8,1.8],
+"ENTERITO ADI":[2.4,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO CAM M/ LARGA":[2.5,'20"',8,null,null,null,null,null,null,null,null,null],
+"ENTERITO CAM M/CORTA":[2.2,'20"',7,null,null,null,null,null,null,null,null,null],
+"ENTERITO LAS":[2,null,null,'cierre',null,null,null,null,null,null,null,null],
+"ENTERITO ORI":[2,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO RIO":[2,null,null,null,null,null,null,null,null,null,null,null],
+"ENTERITO SUO":[2,null,null,null,null,null,null,null,null,1,null,null],
+"FALDA APA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"FALDA CAR":[2,'24"',2,null,null,null,null,null,null,null,null,null],
+"FALDA IKA":[1.6,'32"',1,null,null,0.3,1,1,null,1,null,null],
+"FALDA IRO":[0.8,'24"',2,null,null,null,null,2,null,null,null,null],
+"FALDA IRO ALGOCEL":[0.8,'24"',2,null,null,null,null,null,null,null,null,null],
+"FALDA KEA":[1.6,'32"',1,null,null,null,null,null,null,1,null,null],
+"FALDA MIN":[0.5,'32"',1,null,null,0.2,null,1,null,1,null,null],
+"FALDA RAO":[1.7,'24"',7,null,null,null,null,null,null,null,null,null],
+"JARDINERA JUN":[2,'24"',2,2,25,null,null,null,null,null,null,null],
+"KIMONO RAL":[2,null,null,null,null,null,null,null,null,null,null,null],
+"PANTALON ARA":[1.5,null,null,null,null,0.5,null,4,null,1,null,null],
+"PANTALÓN ARI":[1.4,null,null,null,null,0.4,null,null,null,1,null,null],
+"PANTALÓN BON":[2,null,null,null,null,0.5,1,1,null,1,null,null],
+"PANTALÓN IBO":[1.4,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALON IBO":[1.4,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN ILA":[1.7,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN IRE":[1.4,null,null,null,null,0.4,null,null,null,1,null,null],
+"PANTALÓN JAS":[1.2,null,null,null,null,0.4,1,null,null,1,null,null],
+"PANTALON JAS":[1.2,null,null,null,null,0.4,1,null,null,1,null,null],
+"PANTALÓN JIN":[1.4,null,null,null,null,0.4,null,1,null,1,null,null],
+"PANTALÓN LUI":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"PANTALON LUI":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"PANTALÓN MOY":[1.5,null,null,4,65,null,null,null,null,null,null,null],
+"PANTALÓN PEM":[1.5,null,null,4,80,null,null,null,null,null,null,null],
+"PANTALÓN RAM":[1.5,null,null,null,null,0.4,1,1,null,1,null,null],
+"PANTALÓN TAB":[1.8,null,null,null,null,0.4,2,1,null,1,null,null],
+"POLERA ADE":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA ELO GLORIA":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA GRA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA LAI":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MAI":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MER":[1.15,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA MOR":[1.25,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA NEI":[0.88,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA OVE":[1.8,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA SUO":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA TAR":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA TEO":[1.7,null,null,3.5,160,null,null,null,null,null,null,null],
+"POLERA VIG":[1,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA VIR":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"POLERA ZIN":[1,null,null,null,null,null,null,null,null,null,null,null],
+"SHORT LAO":[1,null,null,null,null,0.5,1,1,null,1,null,null],
+"SWEATER ARA BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES ALGODÓN BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES ALPACA BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES DUO BORIS":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER BES DUO GLORIA":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER IDE":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NEM TALLA1 BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NEM TALLA2 BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NUR BORIS":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER NUR LANA BORIS":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER OME BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"SWEATER OME GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP ATO":[0.7,null,null,null,null,null,null,null,null,null,null,null],
+"TOP CRU":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"TOP DAN":[0.8,'18"',2,null,null,null,null,null,null,null,null,null],
+"TOP DIS":[0.8,'18"',3,null,null,null,null,null,null,null,null,null],
+"TOP ELA":[0.9,null,null,null,null,null,null,null,null,null,null,null],
+"TOP JOI":[0.6,null,null,null,null,null,null,null,null,null,null,null],
+"TOP LEA":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP NAL":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP NES":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NES DUO BORIS":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NES DUO GLORIA":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NIA BORIS":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"TOP NIA GLORIA":[0.4,null,null,null,null,null,null,null,null,null,null,null],
+"TOP REN":[0.5,null,null,null,null,null,null,null,null,null,null,null],
+"TOP SIM":[0.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"TOP TAO":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"TOP VAO":[0.8,null,null,null,null,null,null,null,null,null,null,null],
+"VEST BEB":[1,'24"',2,null,null,null,null,null,null,null,null,null],
+"VESTIDO ATO":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO BAL":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO BEA":[1.5,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO CAM":[2.2,'18"',5,null,42,null,null,null,null,null,null,null],
+"VESTIDO CRU":[2.9,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO ELA":[1.5,null,null,2,45,null,null,null,null,null,null,null],
+"VESTIDO FEL":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO FOE":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO GAL":[1.8,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO GAL MANGA LARGA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO IAL":[2.2,'16"',2,2,7,null,null,null,null,null,null,null],
+"VESTIDO IFA":[2,'18"',8,null,null,null,null,null,null,null,null,null],
+"VESTIDO IFA M/LARGA":[2,'18"',12,null,null,null,null,null,null,null,null,null],
+"VESTIDO IGA":[1.4,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO IMA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO KOA":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO LEN":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LEN LANA":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIA M/CORTA":[2,'18"',9,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIA M/LARGA":[2.2,'18"',9,null,null,null,null,null,null,null,null,null],
+"VESTIDO LIN":[2.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO LON":[1.8,'18"',1,null,null,null,null,null,null,null,null,null],
+"VESTIDO LUEA":[1.2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO MON":[1.6,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PEU":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PIN LINOTO":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO PIN TENCEL":[2,null,null,null,null,null,null,null,null,null,null,null],
+"VESTIDO REN":[1.5,null,null,2,8,null,null,null,null,null,null,null],
+"VESTIDO VAO":[1.5,null,null,null,null,null,null,null,null,null,null,null],
+};
+
+const MLABELS = {tela:"Tela",boton:"Botón",elastico:"Elástico",forroBollo:"Forro bolsillo",brochePant:"Broche pant.",botonInt:"Botón int.",cierre:"Cierre",forroAbrigo:"Forro abrigo",entretela:"Entretela"};
+const TALLAS = ["S","M","L","36","38","40","42","44","12T","2","TU"];
+
+let items=[], state={};
+
+function r2(n){ return n!=null ? Math.round(n*100)/100 : null; }
+
+function norm(s){ return (s||"").trim().toUpperCase().replace(/\s+/g," "); }
+
+function findDB(name){
+  var n=norm(name); if(!n) return null;
+  var keys=Object.keys(DB);
+  for(var k of keys) if(norm(k)===n) return DB[k];
+  var sorted=keys.sort(function(a,b){return b.length-a.length;});
+  for(var k of sorted) if(n.startsWith(norm(k))) return DB[k];
+  for(var k of sorted) if(norm(k).startsWith(n)) return DB[k];
+  return null;
+}
+
+function cargar(){
+  var raw=document.getElementById("tin").value.trim();
+  if(!raw) return;
+  items=[]; state={};
+  var lines=raw.split("\n");
+  for(var line of lines){
+    var cols=line.split("\t");
+    if(cols.length<4) continue;
+    var prenda=(cols[3]||"").trim();
+    var tela=(cols[4]||"").trim();
+    var bsale=(cols[5]||"").trim();
+    var taller=(cols[1]||"").trim();
+    var tn=(cols[2]||"").trim();
+    if(!prenda||prenda.toUpperCase()==="PRENDA") continue;
+    var cantTotal=parseFloat(cols[cols.length-1])||0;
+    if(!cantTotal) continue;
+    var bwords=(bsale||prenda).trim().split(/\s+/);
+    var color=bwords[bwords.length-1]||"";
+    var d=findDB(bsale)||findDB(prenda)||[null,null,null,null,null,null,null,null,null,null,null,null];
+    var tallas=[],qtys=[];
+    for(var ti=0;ti<TALLAS.length;ti++){
+      var q=parseFloat(cols[6+ti])||0;
+      if(q>0){tallas.push(TALLAS[ti]);qtys.push(q);}
+    }
+    var i=items.length;
+    items.push({i,taller,tn,prenda,tela,bsale:bsale||prenda,cantTotal,color,d,tallas,qtys});
+    state[i]={
+      tela:d[0]?"Pendiente":"No aplica",
+      boton:d[2]?"Pendiente":"No aplica",
+      elastico:(d[3]||d[4])?"Pendiente":"No aplica",
+      forroBollo:d[5]?"Pendiente":"No aplica",
+      brochePant:d[6]?"Pendiente":"No aplica",
+      botonInt:d[7]?"Pendiente":"No aplica",
+      cierre:d[9]?"Pendiente":"No aplica",
+      forroAbrigo:d[10]?"Pendiente":"No aplica",
+      entretela:d[11]?"Pendiente":"No aplica"
+    };
+  }
+  document.getElementById("msg").textContent=items.length+" prendas cargadas.";
+  renderCk();
+  goTab("checklist");
+}
+
+function calc(it,f){
+  var d=it.d,c=it.cantTotal;
+  if(f==="tela") return d[0]?r2(d[0]*c)+"m":null;
+  if(f==="boton") return d[2]?r2(d[2]*c)+" u.":null;
+  if(f==="elastico") return d[4]?r2(d[4]*c/100)+"m":null;
+  if(f==="forroBollo") return d[5]?r2(d[5]*c)+"m":null;
+  if(f==="brochePant") return d[6]?r2(d[6]*c)+" u.":null;
+  if(f==="botonInt") return d[7]?r2(d[7]*c)+" u.":null;
+  if(f==="cierre") return d[9]?r2(d[9]*c)+" u.":null;
+  if(f==="forroAbrigo") return d[10]?r2(d[10]*c)+"m":null;
+  if(f==="entretela") return d[11]?r2(d[11]*c)+"m":null;
+  return null;
+}
+
+function sel(idx,f,val){
+  var cls=val==="Disponible"?"disp":val==="Pendiente"?"pend":"na";
+  if(val==="No aplica") return "<select class=\"st na\" onchange=\"setSt("+idx+",'"+f+"',this)\"><option selected>No aplica</option></select>";
+  return "<select class=\"st "+cls+"\" onchange=\"setSt("+idx+",'"+f+"',this)\"><option"+(val==="Pendiente"?" selected":"")+">Pendiente</option><option"+(val==="Disponible"?" selected":"")+">Disponible</option></select>";
+}
+
+function setSt(idx,f,el){
+  state[idx][f]=el.value;
+  el.className="st "+(el.value==="Disponible"?"disp":el.value==="Pendiente"?"pend":"na");
+}
+
+function nc(v,gs){
+  return "<td class=\"num"+(gs?" gs":"")+"\">"+(v!=null?v:"—")+"</td>";
+}
+
+function renderCk(){
+  var tc={},ci=0,html="",curTN="";
+  for(var it of items){
+    if(!(it.taller in tc)) tc[it.taller]=ci++%2===0?"ta":"tb";
+    if(it.tn!==curTN){curTN=it.tn;html+="<tr class=\"sec-row\"><td colspan=\"27\">"+it.taller+" — "+it.tn+"</td></tr>";}
+    var d=it.d,s=state[it.i];
+    html+="<tr class=\""+tc[it.taller]+"\">"
+      +"<td class=\"left\">"+it.taller+"</td>"
+      +"<td class=\"left\">"+it.tn+"</td>"
+      +"<td class=\"left\"><b style=\"font-weight:500\">"+it.bsale+"</b></td>"
+      +"<td class=\"num\">"+it.cantTotal+"</td>"
+      +"<td class=\"left gs\" style=\"font-size:11px;color:var(--muted)\">"+it.tela+"</td>"
+      +nc(calc(it,"tela"),false)
+      +"<td>"+sel(it.i,"tela",s.tela)+"</td>"
+      +nc(d[1]||null,true)
+      +nc(it.color||null,false)
+      +nc(calc(it,"boton"),false)
+      +"<td>"+sel(it.i,"boton",s.boton)+"</td>"
+      +nc(d[3]||null,true)
+      +nc(calc(it,"elastico"),false)
+      +"<td>"+sel(it.i,"elastico",s.elastico)+"</td>"
+      +nc(calc(it,"forroBollo"),true)
+      +"<td>"+sel(it.i,"forroBollo",s.forroBollo)+"</td>"
+      +nc(calc(it,"brochePant"),true)
+      +"<td>"+sel(it.i,"brochePant",s.brochePant)+"</td>"
+      +nc(calc(it,"botonInt"),true)
+      +"<td>"+sel(it.i,"botonInt",s.botonInt)+"</td>"
+      +nc(d[8]||null,true)
+      +nc(calc(it,"cierre"),false)
+      +"<td>"+sel(it.i,"cierre",s.cierre)+"</td>"
+      +nc(calc(it,"forroAbrigo"),true)
+      +"<td>"+sel(it.i,"forroAbrigo",s.forroAbrigo)+"</td>"
+      +nc(calc(it,"entretela"),true)
+      +"<td>"+sel(it.i,"entretela",s.entretela)+"</td>"
+      +"</tr>";
+  }
+  document.getElementById("ck-body").innerHTML=html||"<tr><td colspan=\"27\" class=\"empty\">Sin prendas</td></tr>";
+}
+
+function buildResRows(estado){
+  var acc={};
+  items.forEach(function(it){
+    var s=state[it.i];
+    Object.keys(MLABELS).forEach(function(f){
+      if(s[f]!==estado) return;
+      var det=f==="tela"?it.tela:f==="boton"?(it.d[1]||"")+(it.color?" "+it.color:""):f==="elastico"?(it.d[3]||""):f==="cierre"?(it.d[8]||""):"";
+      var cv=calc(it,f); if(!cv) return;
+      var num=parseFloat(cv)||0;
+      var unit=cv.replace(/[0-9.]+/,"").trim();
+      var key=f+"||"+det;
+      if(!acc[key]) acc[key]={mat:MLABELS[f],det:det,total:0,unit:unit,prendas:[]};
+      acc[key].total=r2(acc[key].total+num);
+      acc[key].prendas.push(it.bsale);
+    });
+  });
+  var rows=[["Material","Detalle","Total","Prendas"]];
+  Object.keys(MLABELS).forEach(function(f){
+    Object.values(acc).filter(function(r){return r.mat===MLABELS[f];}).forEach(function(r){
+      rows.push([r.mat,r.det,r.total+" "+r.unit,r.prendas.join(", ")]);
+    });
+  });
+  return rows;
+}
+
+function buildTallerRows(taller){
+  var its=items.filter(function(it){return it.taller===taller;});
+  var acc={};
+  function add(lbl,det,num,unit){
+    if(!num) return;
+    var k=lbl+"||"+det;
+    if(!acc[k]) acc[k]={lbl:lbl,det:det,total:0,unit:unit};
+    acc[k].total=r2(acc[k].total+num);
+  }
+  var totalPrendas=its.reduce(function(s,it){return s+it.cantTotal;},0);
+  var tallasAcc={};
+  its.forEach(function(it){
+    (it.tallas||[]).forEach(function(t,i){
+      var q=(it.qtys||[])[i]||0;
+      if(q){if(!tallasAcc[t])tallasAcc[t]=0;tallasAcc[t]+=q;}
+    });
+  });
+  its.forEach(function(it){
+    var d=it.d,c=it.cantTotal;
+    if(d[0])  add("Tela",it.tela||"",r2(d[0]*c),"m");
+    if(d[2])  add("Botón",(d[1]||"")+(it.color?" "+it.color:""),r2(d[2]*c),"u.");
+    if(d[4])  add("Elástico",d[3]||"",r2(d[4]*c/100),"m");
+    if(d[5])  add("Forro bolsillo","",r2(d[5]*c),"m");
+    if(d[6])  add("Broche pant.","",r2(d[6]*c),"u.");
+    if(d[7])  add("Botón int.","",r2(d[7]*c),"u.");
+    if(d[9])  add("Cierre",d[8]||"",r2(d[9]*c),"u.");
+    if(d[10]) add("Forro abrigo","",r2(d[10]*c),"m");
+    if(d[11]) add("Entretela","",r2(d[11]*c),"m");
+  });
+  var rows=[["Material","Detalle","Total"]];
+  rows.push(["— MATERIALES —","",""]);
+  Object.values(acc).forEach(function(r){rows.push([r.lbl,r.det,r.total+" "+r.unit]);});
+  rows.push(["— ETIQUETAS —","",""]);
+  rows.push(["Etiqueta NIMA","",totalPrendas+" u."]);
+  Object.keys(tallasAcc).sort().forEach(function(t){rows.push(["Etiqueta talla "+t,"",tallasAcc[t]+" u."]);});
+  rows.push(["Etiqueta cuidados","",totalPrendas+" u."]);
+  rows.push(["— OTROS —","",""]);
+  rows.push(["Ganchos plásticos","","—"]);
+  rows.push(["Hilo","","—"]);
+  return rows;
+}
+
+function renderResumen(){
+  if(!items.length){document.getElementById("rs-content").innerHTML="<div class=\"empty\">Sin datos</div>";return;}
+  function card(estado,bg){
+    var rows=buildResRows(estado);
+    if(rows.length<=1) return "<div class=\"empty\">Sin items</div>";
+    var t="<table style=\"width:100%;border-collapse:collapse;font-size:12px\"><thead><tr>";
+    rows[0].forEach(function(h){t+="<th style=\"background:#f7f5f0;padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border)\">"+h+"</th>";});
+    t+="</tr></thead><tbody>";
+    for(var i=1;i<rows.length;i++){
+      var bg2=i%2===0?"#fafafa":"#fff";
+      t+="<tr>"+rows[i].map(function(c,ci){return "<td style=\"padding:7px 12px;border-bottom:1px solid #f0ede8;background:"+bg2+(ci===2?";font-weight:600;color:var(--accent)":"")+"\">"+c+"</td>";}).join("")+"</tr>";
+    }
+    t+="</tbody></table>";
+    return t;
+  }
+  document.getElementById("rs-content").innerHTML=
+    "<div class=\"res-grid\">"
+    +"<div class=\"res-card\"><div class=\"res-head\" style=\"background:var(--pend)\">Pendientes de compra</div>"+card("Pendiente")+"</div>"
+    +"<div class=\"res-card\"><div class=\"res-head\" style=\"background:var(--disp)\">Disponibles</div>"+card("Disponible")+"</div>"
+    +"</div>";
+}
+
+function renderTotales(){
+  if(!items.length){document.getElementById("tot-content").innerHTML="<div class=\"empty\">Sin datos</div>";return;}
+  var tallers=[];
+  items.forEach(function(it){if(tallers.indexOf(it.taller)===-1)tallers.push(it.taller);});
+  var h="";
+  tallers.forEach(function(t){
+    var rows=buildTallerRows(t);
+    h+="<div class=\"tsec\"><div class=\"thead\">"+t+"</div><table class=\"ttbl\"><thead><tr><th>Material</th><th>Detalle</th><th style=\"text-align:right\">Total</th></tr></thead><tbody>";
+    for(var i=1;i<rows.length;i++){
+      var r=rows[i];
+      if(r[0].startsWith("—")){
+        h+="<tr class=\"sec-lbl\"><td colspan=\"3\">"+r[0].replace(/—/g,"").trim()+"</td></tr>";
+      } else {
+        h+="<tr><td style=\"font-weight:500\">"+r[0]+"</td><td style=\"color:var(--muted);font-size:11px\">"+r[1]+"</td><td style=\"text-align:right;font-weight:600;color:var(--accent)\">"+r[2]+"</td></tr>";
+      }
+    }
+    h+="</tbody></table></div>";
+  });
+  document.getElementById("tot-content").innerHTML=h;
+}
+
+function xlsxDown(fname, sheets){
+  var wb=XLSX.utils.book_new();
+  sheets.forEach(function(s){
+    var ws=XLSX.utils.aoa_to_sheet(s.rows);
+    ws["!cols"]=s.cols||[];
+    XLSX.utils.book_append_sheet(wb,ws,s.name.slice(0,31));
+  });
+  XLSX.writeFile(wb,fname+".xlsx");
+}
+
+function exportResumen(){
+  if(!items.length){alert("Genera el checklist primero.");return;}
+  var sheets=[];
+  var pend=buildResRows("Pendiente");
+  if(pend.length>1) sheets.push({name:"Pendientes",rows:pend,cols:[{wch:16},{wch:22},{wch:10},{wch:50}]});
+  var disp=buildResRows("Disponible");
+  if(disp.length>1) sheets.push({name:"Disponibles",rows:disp,cols:[{wch:16},{wch:22},{wch:10},{wch:50}]});
+  if(!sheets.length){alert("No hay datos.");return;}
+  xlsxDown("Resumen_Compra",sheets);
+}
+
+function exportTotales(){
+  if(!items.length){alert("Genera el checklist primero.");return;}
+  var tallers=[];
+  items.forEach(function(it){if(tallers.indexOf(it.taller)===-1)tallers.push(it.taller);});
+  var sheets=[];
+  var allRows=[["Taller","Material","Detalle","Total"]];
+  tallers.forEach(function(t){
+    var rows=buildTallerRows(t);
+    sheets.push({name:t,rows:[["TALLER: "+t,"",""]].concat(rows),cols:[{wch:20},{wch:22},{wch:10}]});
+    for(var i=1;i<rows.length;i++) if(!rows[i][0].startsWith("—")) allRows.push([t].concat(rows[i]));
+  });
+  sheets.push({name:"RESUMEN GENERAL",rows:allRows,cols:[{wch:12},{wch:18},{wch:22},{wch:10}]});
+  xlsxDown("Preparacion_Pedido",sheets);
+}
+
+function exportTodo(){
+  if(!items.length){alert("Genera el checklist primero.");return;}
+  var rows=[["Taller","T.N","Prenda","Cant.","Tipo Tela","Tela m","Tipo Botón","Color","Cant.Botón","Tipo Elást.","Elást.m","Forro Bols.","Broche","Botón Int.","Tipo Cierre","Cant.Cierre","Forro Abr.","Entretela"]];
+  items.forEach(function(it){
+    var d=it.d,c=it.cantTotal;
+    rows.push([it.taller,it.tn,it.bsale,c,it.tela,
+      d[0]?r2(d[0]*c):"",d[1]||"",it.color||"",d[2]?r2(d[2]*c):"",
+      d[3]||"",d[4]?r2(d[4]*c/100):"",d[5]?r2(d[5]*c):"",
+      d[6]?r2(d[6]*c):"",d[7]?r2(d[7]*c):"",d[8]||"",
+      d[9]?r2(d[9]*c):"",d[10]?r2(d[10]*c):"",d[11]?r2(d[11]*c):""
+    ]);
+  });
+  xlsxDown("Checklist_Completo",[{name:"Checklist",rows:rows,cols:[{wch:10},{wch:8},{wch:22},{wch:6},{wch:14},{wch:8},{wch:10},{wch:10},{wch:10},{wch:12},{wch:8},{wch:12},{wch:8},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10}]}]);
+}
+
+function renderDB(){
+  var h="";
+  Object.keys(DB).sort().forEach(function(k){
+    var d=DB[k];
+    function v(x){return x!=null?x:"";}
+    h+="<tr style=\"border-bottom:1px solid #f0ede8\">"
+      +"<td><input class=\"dbi dbi-n\" value=\""+v(k)+"\" onchange=\"renDB('"+k+"',this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"0.01\" value=\""+v(d[0])+"\" onchange=\"udDB('"+k+"',0,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-txt\" value=\""+v(d[1])+"\" onchange=\"udDB('"+k+"',1,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"1\" value=\""+v(d[2])+"\" onchange=\"udDB('"+k+"',2,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-txt\" value=\""+v(d[3])+"\" onchange=\"udDB('"+k+"',3,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"0.01\" value=\""+v(d[4])+"\" onchange=\"udDB('"+k+"',4,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"0.01\" value=\""+v(d[5])+"\" onchange=\"udDB('"+k+"',5,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"1\" value=\""+v(d[6])+"\" onchange=\"udDB('"+k+"',6,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"1\" value=\""+v(d[7])+"\" onchange=\"udDB('"+k+"',7,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-txt\" value=\""+v(d[8])+"\" onchange=\"udDB('"+k+"',8,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"1\" value=\""+v(d[9])+"\" onchange=\"udDB('"+k+"',9,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"0.01\" value=\""+v(d[10])+"\" onchange=\"udDB('"+k+"',10,this.value)\"></td>"
+      +"<td><input class=\"dbi dbi-num\" type=\"number\" step=\"0.01\" value=\""+v(d[11])+"\" onchange=\"udDB('"+k+"',11,this.value)\"></td>"
+      +"<td><button class=\"btn-del\" onclick=\"delDB('"+k+"')\">Eliminar</button></td>"
+      +"</tr>";
+  });
+  document.getElementById("db-body").innerHTML=h;
+}
+
+function udDB(k,i,v){if(DB[k])DB[k][i]=v===""?null:(isNaN(+v)?v:+v);}
+function renDB(ok,nk){nk=nk.trim().toUpperCase();if(!nk||nk===ok)return;DB[nk]=DB[ok];delete DB[ok];renderDB();}
+function delDB(k){if(confirm("¿Eliminar "+k+"?")){{delete DB[k];renderDB();}}}
+function addRow(){var k=prompt("Nombre del modelo:");if(!k||!k.trim())return;DB[k.trim().toUpperCase()]=[null,null,null,null,null,null,null,null,null,null,null,null];renderDB();}
+function importDB(inp){
+  var f=inp.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){try{Object.assign(DB,JSON.parse(e.target.result));renderDB();toast("Base de datos importada");}catch(e){alert("Error: "+e.message);}};
+  r.readAsText(f);inp.value="";
+}
+function toast(msg){var t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},3000);}
+
+function dropXLSX(e){
+  e.preventDefault();
+  document.getElementById("db-upload-area").style.borderColor="#B8D4C4";
+  var f=e.dataTransfer.files[0];
+  if(!f){return;}
+  readXLSXFile(f);
+}
+
+function loadXLSX(inp){
+  var f=inp.files[0];
+  if(!f) return;
+  readXLSXFile(f);
+  inp.value="";
+}
+
+function readXLSXFile(f){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      // Parse: skip first 2 header rows, data from row 3
+      // Cols: 0=prenda,1=metrosTela,2=tipBoton,3=cantBoton,4=tipoElastico,5=metroElastico,6=forroBollo,7=brochePant,8=botonInt,9=tipCierre,10=cantCierre,11=forroAbrigo,12=entretela
+      var newDB={};
+      for(var i=2;i<rows.length;i++){
+        var r=rows[i];
+        if(!r||!r[0]) continue;
+        var prenda=String(r[0]).trim().toUpperCase();
+        if(!prenda) continue;
+        newDB[prenda]=[
+          r[1]||null,   // metros tela
+          r[2]||null,   // tipo boton
+          r[3]||null,   // cant boton
+          r[4]||null,   // tipo elastico
+          r[5]||null,   // metro elastico
+          r[6]||null,   // forro bolsillo
+          r[7]||null,   // broche pant
+          r[8]||null,   // boton int
+          r[9]||null,   // tipo cierre
+          r[10]||null,  // cant cierre
+          r[11]||null,  // forro abrigo
+          r[12]||null   // entretela
+        ];
+      }
+      var count=Object.keys(newDB).length;
+      if(count===0){alert("No se encontraron modelos en el archivo.");return;}
+      // Replace DB
+      Object.keys(DB).forEach(function(k){delete DB[k];});
+      Object.assign(DB,newDB);
+      document.getElementById("db-upload-msg").textContent="✅ "+count+" modelos cargados";
+      document.getElementById("db-upload-area").style.display="none";
+      document.getElementById("db-table-area").style.display="block";
+      renderDB();
+      toast("Base de datos cargada: "+count+" modelos");
+    }catch(err){
+      alert("Error al leer el archivo: "+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+function goTab(t){
+  ["db","pedido","checklist","resumen","totales"].forEach(function(id){
+    document.getElementById("p-"+id).classList.toggle("on",id===t);
+  });
+  document.querySelectorAll(".tab").forEach(function(el,i){
+    el.classList.toggle("on",["db","pedido","checklist","resumen","totales"][i]===t);
+  });
+  if(t==="resumen") renderResumen();
+  if(t==="totales") renderTotales();
+  if(t==="db") renderDB();
+}
+</script>
+</body>
+</html>
