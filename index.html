@@ -100,13 +100,14 @@ select.st.pe{background:var(--pb);color:var(--pend);border-color:var(--pp)}
 <!-- BASE DE DATOS -->
 <div id="p-db" class="panel on">
   <div id="drop-area" class="drop-zone"
+    onclick="document.getElementById('db-file').click()"
     ondragover="event.preventDefault();this.classList.add('over')"
     ondragleave="this.classList.remove('over')"
     ondrop="onDrop(event)">
     <div class="drop-icon">📂</div>
     <div class="drop-title">Arrastra aquí el Excel de base de datos</div>
     <div class="drop-sub">Archivo: base_de_datos_23_04_26.xlsx</div>
-    <button class="btn" onclick="event.stopPropagation();document.getElementById('db-file').click()" style="margin-top:0">Seleccionar archivo Excel</button>
+    <button class="btn" onclick="document.getElementById('db-file').click()" style="margin-top:0">Seleccionar archivo Excel</button>
     <input type="file" id="db-file" accept=".xlsx,.xls" style="display:none" onchange="onFileInput(this)">
     <div id="drop-msg" style="margin-top:14px;font-size:12px;color:var(--muted)"></div>
   </div>
@@ -443,7 +444,10 @@ function onFileInput(inp){
 }
 
 function readXLSX(file){
+  if(!file){alert("No se recibió ningún archivo.");return;}
+  if(typeof XLSX==="undefined"){alert("Error: librería XLSX no cargada.");return;}
   var reader = new FileReader();
+  reader.onerror = function(){alert("Error al leer el archivo.");};
   reader.onload = function(e){
     try {
       var data = new Uint8Array(e.target.result);
