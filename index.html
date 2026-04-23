@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checklist Producción</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-style@0.8.13/dist/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#F5F3EE;--surface:#FFFFFF;--border:#DDD9D0;--text:#1A1814;--muted:#7A7670;--accent:#2D4A3E;--accent-light:#E8F0EC;--pend:#7A3B1E;--pend-bg:#FDF0E8;--pend-border:#E8B896;--disp:#1A4A2E;--disp-bg:#E8F5ED;--disp-border:#96D4A8;--na:#7A7670;--na-bg:#F0EDE8;--na-border:#C8C4BC}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -623,8 +623,76 @@ function renderTotales(){
 function xlsxDown(fname, sheets){
   var wb=XLSX.utils.book_new();
   sheets.forEach(function(s){
-    var ws=XLSX.utils.aoa_to_sheet(s.rows);
-    ws["!cols"]=s.cols||[];
+    var rows=s.rows;
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+
+    // Column widths with auto-fit based on content
+    var numCols=0;
+    rows.forEach(function(r){if(r&&r.length>numCols)numCols=r.length;});
+    var colWidths=[];
+    for(var c=0;c<numCols;c++){
+      var maxW=8;
+      rows.forEach(function(r){
+        if(r&&r[c]!=null){
+          var len=String(r[c]).length;
+          if(len>maxW)maxW=len;
+        }
+      });
+      colWidths.push({wch:Math.min(maxW+4,50)});
+    }
+    ws["!cols"]=colWidths;
+
+    // Row heights for all rows
+    var rowHeights=[];
+    rows.forEach(function(){rowHeights.push({hpt:18});});
+    ws["!rows"]=rowHeights;
+
+    // Apply styles using cell properties
+    var range=XLSX.utils.decode_range(ws["!ref"]||"A1");
+    var headerGreen="2D4A3E";
+    var subGreen="4A7A6A";
+    var beige="F5F3EE";
+
+    for(var R=range.s.r;R<=range.e.r;R++){
+      var row=rows[R];
+      if(!row) continue;
+      var isSec=row.length===1;
+      var isHdr=R===0;
+
+      for(var C=range.s.c;C<=range.e.c;C++){
+        var addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr]) ws[addr]={t:"s",v:""};
+        var cell=ws[addr];
+
+        // Wrap text
+        cell.s=cell.s||{};
+        cell.s.alignment={wrapText:true,vertical:"center"};
+
+        if(isSec){
+          cell.s.fill={fgColor:{rgb:headerGreen}};
+          cell.s.font={bold:true,color:{rgb:"FFFFFF"},sz:11};
+          cell.s.alignment={wrapText:true,vertical:"center"};
+        } else if(isHdr){
+          cell.s.fill={fgColor:{rgb:headerGreen}};
+          cell.s.font={bold:true,color:{rgb:"FFFFFF"},sz:10};
+          cell.s.alignment={horizontal:"center",vertical:"center",wrapText:true};
+        } else {
+          var rowBg=R%2===0?"FFFFFF":beige;
+          cell.s.fill={fgColor:{rgb:rowBg}};
+          cell.s.font={sz:10};
+          if(C===0) cell.s.font.bold=true;
+          cell.s.alignment={wrapText:true,vertical:"center"};
+        }
+        // Border on all cells
+        cell.s.border={
+          top:{style:"thin",color:{rgb:"DDD9D0"}},
+          bottom:{style:"thin",color:{rgb:"DDD9D0"}},
+          left:{style:"thin",color:{rgb:"DDD9D0"}},
+          right:{style:"thin",color:{rgb:"DDD9D0"}}
+        };
+      }
+    }
+
     XLSX.utils.book_append_sheet(wb,ws,s.name.slice(0,31));
   });
   XLSX.writeFile(wb,fname+".xlsx");
